@@ -1,0 +1,3 @@
+{
+    "connection_string": "mongodb+srv://doadmin:d4K9i10k57maNg68@db-mongodb-blr1-63634-a90493f0.mongo.ondigitalocean.com/admin?tls=true&authSource=admin&replicaSet=db-mongodb-blr1-63634"
+}

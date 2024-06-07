@@ -1,0 +1,3 @@
+{
+    "connection_string": "mongodb+srv://doadmin:64u5r97eLv81XY3V@private-skillmine-mongodb-01-b4a6e920.mongo.ondigitalocean.com/{{db_name}}?authMechanism=SCRAM-SHA-1&ssl=true&authSource=admin&tlsCAFile={{ca_cert_path}}"
+}
