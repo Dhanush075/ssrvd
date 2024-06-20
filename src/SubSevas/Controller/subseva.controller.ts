@@ -1,58 +1,38 @@
-import { Controller, Post, Response, Body, Param, Get, Delete, Query } from "@nestjs/common";
-import { ResultEntity } from '@skillmine-dev-public/response-util';
+import { Controller, Post, Body, Param, Get, Query, HttpException, HttpStatus } from "@nestjs/common";
 import { ISubSevas } from "../model/collections/SubSevas";
-import { SubSevaService } from "../Services/SubSevaSurvice";
+import { SubSevaService } from "../Services/SubSevaService";
 
 @Controller('sub-sevas')
-export class SubSevasContorller {
-   
-    
+export class SubSevasController {
+
     @Post("/createSubSevas")
-    async createNewSeva(@Response() res, @Body() body: ISubSevas) {
-        try {
-            const result = await SubSevaService.Instance.createNewSubSeva(body);
-            return res.status(201).json({ data: result });
-        } catch (error) {
-            return res.status(500).json({ error: "Could not add sub seva" });
-        }
+    async createNewSeva(@Body() body: ISubSevas) {
+        const result = await SubSevaService.Instance.createNewSubSeva(body);
+        return { data: result };
     }
 
-    /**
-     * Get Sevas By ID
-     */
     @Get("/:subseva_id")
-    async getSevaByID(@Response() res, @Param("subseva_id") subseva_id: string) {
-        try {
-            const result = await SubSevaService.Instance.getSubSevaByID(subseva_id);
-            if (result) {
-                return res.status(200).json({ data: result });
-            } else {
-                return res.status(404).json({ error: 'Sub Seva not found' });
-            }
-        } catch (error) {
-            return res.status(500).json({ error: error.message });
-        }
+    async getSevaByID(@Param("subseva_id") subseva_id: string) {
+        const result = await SubSevaService.Instance.getSubSevaByID(subseva_id);
+        return { data: result };
     }
 
-    @Get("/allSubsevas/:parentSevaRef")
-    async getAllSevas(@Response() res, @Param("parentSevaRef") parentSevaRef:string) {
+    // @Get("/allSubsevas/:parentSevaRef")
+    // async getAllSevas(@Param("parentSevaRef") parentSevaRef: string) {
+    //     const result = await SubSevaService.Instance.getAllSubSevas(parentSevaRef);
+    //     return { data: result };
+    // }
+
+    @Get("/")
+    async getAllSubSevas(@Query("getsubServices") getsubServices: boolean, @Query("seva_type") seva_type: number) {
         try {
-            const result = await SubSevaService.Instance.getAllSubSevas(parentSevaRef);
-            if (result) {
-                return res.status(200).json({ data: result });
-            } else {
-                return res.status(404).json({ error: 'Sub Seva not found' });
-            }
+            const result = await SubSevaService.Instance.getAllSubSevas(getsubServices,seva_type);
+            return result;
         } catch (error) {
-            return res.status(500).json({ error: "Sub seva not found" });
+            throw new HttpException({
+                success: false,
+                error: 'Failed to get all SubSevas'
+            }, HttpStatus.INTERNAL_SERVER_ERROR);
         }
     }
-
-   
-
-
-
-
-
-
 }

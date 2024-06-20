@@ -7,14 +7,12 @@ import { UserRecieptService } from "../Services/UserRecieptService";
 export class UserRecieptController {
    
     
-    @Post("/create")
-    async createUserReciept(@Response() res, @Body() body: IUserReciept) {
-        try {
-            const result = await UserRecieptService.Instance.createNewUserReciept(body);
-            return res.status(201).json({ data: result });
-        } catch (error) {
-            return res.status(500).json({ error: "Could not add UserReciept" });
-        }
+  
+    @Post("/createReciept")
+    async createNewSeva(@Body() body: any) {
+        const result = await UserRecieptService.Instance.createNewUserReciept(body);
+        console.log("result",result)
+        return { data: result };
     }
 
     /**

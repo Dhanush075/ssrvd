@@ -9,18 +9,20 @@ import { HttpModule } from '@nestjs/axios';
 import { ScheduleModule } from '@nestjs/schedule';
 import { RequestContextMiddleware } from 'routers/middlewares/requestcontext.middleware';
 import { RequestContextPreparationService } from 'routers/context/request/requestcontext.service';
-import { SevasContorller } from './Sevas/controller/seva.controller';
-import { SubSevasContorller } from './SubSevas/Controller/subseva.controller';
+import { SubSevasController } from './SubSevas/Controller/subseva.controller';
 import { UserRecieptController } from './UserReciept/Controller/userreciept.controller';
+import { SevasController } from './Sevas/Controller/seva.controller';
+import { PaymentGatewayController } from './PaymentGateway/Controller/paymentgateway.controller';
 
 
 @Module({
   imports: [ConfigModule.forRoot(), HttpModule, ScheduleModule.forRoot()],
   controllers: [
     AppController,
-    SevasContorller,
-    SubSevasContorller,
-    UserRecieptController
+    SevasController,
+    SubSevasController,
+    UserRecieptController,
+    PaymentGatewayController
     
   ],
   providers: [

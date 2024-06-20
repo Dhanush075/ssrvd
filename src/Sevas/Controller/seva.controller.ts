@@ -1,58 +1,54 @@
-import { Controller, Post, Response, Body, Param, Get, Delete } from "@nestjs/common";
-import { ResultEntity } from '@skillmine-dev-public/response-util';
+import { Controller, Post, Body, Param, Get, HttpException, HttpStatus, Query } from "@nestjs/common";
 import { SevaService } from "../services/SevaService";
 import { ISevas } from "../model/collections/Sevas";
+import { HttpService } from "@nestjs/axios";
+import { stringify, parse } from 'flatted';
 
 @Controller('sevas')
-export class SevasContorller {
-   
-    
+export class SevasController {
+    constructor(private readonly httpService: HttpService) { }
     @Post("/create")
-    async createNewSeva(@Response() res, @Body() body: ISevas) {
+    async createNewSeva(@Body() body: ISevas) {
         try {
             const result = await SevaService.Instance.createNewSeva(body);
-            return res.status(201).json({ data: result });
+            return {
+                success: true,
+                data: result,
+            };
         } catch (error) {
-            return res.status(500).json({ error: error.message });
+            throw new HttpException({
+                success: false,
+                error: 'Failed to create Seva'
+            }, HttpStatus.INTERNAL_SERVER_ERROR);
         }
     }
 
-    /**
-     * Get Sevas By ID
-     */
     @Get("/:seva_id")
-    async getSevaByID(@Response() res, @Param("seva_id") seva_id: string) {
+    async getSevaByID(@Param("seva_id") seva_id: string) {
         try {
             const result = await SevaService.Instance.getSevaByID(seva_id);
-            if (result) {
-                return res.status(200).json({ data: result });
-            } else {
-                return res.status(404).json({ error: 'Seva not found' });
-            }
+            return {
+                success: true,
+                data: result,
+            };
         } catch (error) {
-            return res.status(500).json({ error: error.message });
+            throw new HttpException({
+                success: false,
+                error: 'Failed to get Seva by ID'
+            }, HttpStatus.INTERNAL_SERVER_ERROR);
         }
     }
 
     @Get("/")
-    async getAllSevas(@Response() res) {
+    async getAllSevas(@Query("getServices") getServices:boolean) {
         try {
-            const result = await SevaService.Instance.getAllSevas();
-            if (result) {
-                return res.status(200).json({ data: result });
-            } else {
-                return res.status(404).json({ error: 'Seva not found' });
-            }
+            const result = await SevaService.Instance.getAllSevas(getServices);
+            return   result;
         } catch (error) {
-            return res.status(500).json({ error: error.message });
+            throw new HttpException({
+                success: false,
+                error: 'Failed to get all Sevas'
+            }, HttpStatus.INTERNAL_SERVER_ERROR);
         }
     }
-
-   
-
-
-
-
-
-
 }
