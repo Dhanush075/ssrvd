@@ -1,8 +1,9 @@
 import { Controller, Post, Body, Param, Get, HttpException, HttpStatus, Query } from "@nestjs/common";
-import { SevaService } from "../services/SevaService";
+
 import { ISevas } from "../model/collections/Sevas";
 import { HttpService } from "@nestjs/axios";
 import { stringify, parse } from 'flatted';
+import { SevaService } from "../Services/SevaService";
 
 @Controller('sevas')
 export class SevasController {

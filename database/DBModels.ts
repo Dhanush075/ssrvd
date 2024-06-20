@@ -14,7 +14,7 @@ import * as UserReciept from "../src/UserReciept/model/collections/UserReciept";
 import * as Cart from "../src/Cart/model/collections/Cart";
 
 //payment gateway
-import * as PaymentGateway from "../src/PaymentGateway/model/collections/PaymentGateway"
+import * as PaymentGateway from "../src/PaymentGateWay/model/collections/PaymentGateway";
 
 
 export class DBModels {

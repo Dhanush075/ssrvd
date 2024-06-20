@@ -12,7 +12,8 @@ import { RequestContextPreparationService } from 'routers/context/request/reques
 import { SubSevasController } from './SubSevas/Controller/subseva.controller';
 import { UserRecieptController } from './UserReciept/Controller/userreciept.controller';
 import { SevasController } from './Sevas/Controller/seva.controller';
-import { PaymentGatewayController } from './PaymentGateway/Controller/paymentgateway.controller';
+import { PaymentGatewayController } from './PaymentGateWay/Controller/paymentgateway.controller';
+
 
 
 @Module({
