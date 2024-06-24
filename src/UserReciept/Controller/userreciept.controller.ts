@@ -12,7 +12,7 @@ export class UserRecieptController {
     async createNewSeva(@Body() body: any) {
         const result = await UserRecieptService.Instance.createNewUserReciept(body);
         console.log("result",result)
-        return { data: result };
+        return  result ;
     }
 
     /**

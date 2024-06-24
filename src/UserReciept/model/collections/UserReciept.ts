@@ -5,19 +5,15 @@ export interface IUserReciept extends mongoose.Document {
     _id: string;
     id: string;
 
-    subSevaName: string;
-    subSevaref: string;
-    price: number;
-    duration: string;
-    description: string;
-    parentSevaRef: string;
-    parentSevaName: string;
-    numberOfTickets: number;
-    slot: string;
-    availableTickects: number;
-    totalAmount: number;
+    SubmitSevaBooking: boolean;
     name: string;
-    phoneNumber: number;
+    goutram: string;
+    bookingdata: any;
+    total_amount: number;
+    booking_date: Date;
+    order_id: string;
+    transaction_id: string;
+    is_verified: boolean;
 
 
 
@@ -28,19 +24,15 @@ export interface IUserReciept extends mongoose.Document {
 
 export var IUserRecieptSchema = new mongoose.Schema({
 
-    sevaName: { type: String },
-    subSevaref: { type: String },
-    price: { type: Number },
-    duration: { type: String },
-    description: { type: String },
-    parentSevaRef: { type: String },
-    parentSevaName: { type: String },
-    numberOfTickets: { type: Number },
-    slot: { type: String },
-    availableTickects: { type: Number },
-    totalAmount: { type: Number },
+    SubmitSevaBooking: { type: Boolean },
     name: { type: String },
-    phoneNumber: { type: Number },
+    goutram: { type: String },
+    bookingdata: { type: [Object] },
+    total_amount: { type: Number },
+    booking_date: { type: Date },
+    order_id: { type: String },
+    transaction_id: { type: String },
+    is_verified: { type: Boolean },
 
     // db defaults
     _id: { type: String, default: RandomNumberGenerator.getUniqueId },
