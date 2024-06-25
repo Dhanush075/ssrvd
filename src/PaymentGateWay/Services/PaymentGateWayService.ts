@@ -41,6 +41,8 @@ export class PaymentGatewayService {
             const form = new FormData();
             for (const key in transactionData) {
                 form.append(key, transactionData[key]);
+                let abc = form.append(key, transactionData[key]);
+                console.log
             }
             console.log("form", form)
             const axiosConfig = {
@@ -91,6 +93,24 @@ export class PaymentGatewayService {
             api_key["key_id"] = process.env.key_id;
             api_key["key_secret"] = process.env.key_secret;
             return api_key;
+        } catch (error) {
+            throw new HttpException('Internal Error', HttpStatus.INTERNAL_SERVER_ERROR);
+        }
+    }
+    async updateTransactionIdannOrderId(body: any) {
+        try {
+            const dbContext = await DbContext.getContextByConfig();
+            const orderId = await dbContext.UserReciept.updateOne({ order_id: body.order_id }, { $set: { transaction_id: body.transaction_id } })
+            const newOrder = new dbContext.PaymentGateway();
+            newOrder.order_id = body.order_id;
+            newOrder.transaction_id = body.transaction_id;
+            let orderCreated = await dbContext.UserReciept.findOne({ order_id: body.order_id });
+            if (orderCreated) {
+                newOrder.name = orderCreated.name;
+                newOrder.mobile = orderCreated.mobileNumber;
+            }
+            let saved = await newOrder.save();
+            return saved;
         } catch (error) {
             throw new HttpException('Internal Error', HttpStatus.INTERNAL_SERVER_ERROR);
         }

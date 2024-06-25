@@ -24,4 +24,10 @@ export class PaymentGatewayController {
     //     const result = await PaymentGatewayService.Instance.verifyTheStatus(body);
     //     return { data: result };
     // }
+       
+    @Post("/update/transactionId/orderId")
+    async updateTransactionIdAndOrderId(@Body() body: any) {
+        const result = await PaymentGatewayService.Instance.updateTransactionIdannOrderId(body);
+        return  result ;
+    }
 }
