@@ -18,16 +18,24 @@ export class PaymentGatewayController {
         return { data: result };
     }
 
-   
+
     // @Post("/payment/verify")
     // async verifyThepayment(@Body() body: IPaymentGateway) {
     //     const result = await PaymentGatewayService.Instance.verifyTheStatus(body);
     //     return { data: result };
     // }
-       
+
     @Post("/update/transactionId/orderId")
     async updateTransactionIdAndOrderId(@Body() body: any) {
         const result = await PaymentGatewayService.Instance.updateTransactionIdannOrderId(body);
-        return  result ;
+        return result;
+    }
+
+    @Post('callback')
+    async handleCallback(@Body() body: any): Promise<any> {
+        const { checksum, ...otherData } = body;
+        console.log("body",body)
+        return body;
     }
 }
+
