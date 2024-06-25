@@ -59,10 +59,13 @@ export class UserRecieptService {
             };
           
             let reciept = await axios(axiosConfig)
+            console.log("reciept",reciept.data)
             const newOrder = new dbContext.UserReciept();
             newOrder.order_id = reciept.data.order_id;
             Object.assign(newOrder, userReciept);
-            await newOrder.save();
+            console.log("newOrder",newOrder)
+            // let saved = await newOrder.save();
+            // console.log("saved",saved)
             return reciept.data;
         } catch (error) {
             throw new HttpException('Failed to create SubSeva', HttpStatus.INTERNAL_SERVER_ERROR);
