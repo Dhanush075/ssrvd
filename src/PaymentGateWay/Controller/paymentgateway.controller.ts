@@ -19,9 +19,9 @@ export class PaymentGatewayController {
     }
 
    
-    @Post("/payment/verify")
-    async verifyThepayment(@Body() body: IPaymentGateway) {
-        const result = await PaymentGatewayService.Instance.verifyTheStatus(body);
-        return { data: result };
-    }
+    // @Post("/payment/verify")
+    // async verifyThepayment(@Body() body: IPaymentGateway) {
+    //     const result = await PaymentGatewayService.Instance.verifyTheStatus(body);
+    //     return { data: result };
+    // }
 }

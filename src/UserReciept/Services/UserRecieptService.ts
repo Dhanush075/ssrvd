@@ -4,6 +4,7 @@ import { IUserReciept } from "../model/collections/UserReciept";
 import DbContext from "database/DBContext";
 import { HttpException } from "@nestjs/common";
 import axios from "axios";
+import { PaymentGatewayService } from "src/PaymentGateWay/Services/PaymentGateWayService";
 
 
 
@@ -56,14 +57,26 @@ export class UserRecieptService {
                 data: userReciept
 
             };
-
-            const reciept = await axios(axiosConfig);
-            console.log("savedSevas",reciept.data)
-            
-            const newOrder = new dbContext.PaymentGateway();
+          
+            let reciept = await axios(axiosConfig);
+            let order_id = reciept
+            console.log("reciept",reciept.data)
+            let body = {
+                amount: userReciept.total_amount,
+                mobileNumber: userReciept.mobileNumber,
+                name: userReciept.name,
+                order_id: reciept.data.order_id
+            }
+            let paymentGateway = await PaymentGatewayService.Instance.createOrderInit(body);
+            console.log("paymentGateway",paymentGateway);
+            const newOrder = new dbContext.UserReciept();
+            newOrder.order_id = reciept.data.order_id;
+            // if(paymentGateway || paymentGateway.transaction_id){
+            //     newOrder.transaction_id = userReciept.transaction_id;
+            // }
             Object.assign(newOrder, userReciept);
             await newOrder.save();
-            return reciept.data;
+            return paymentGateway;
         } catch (error) {
             throw new HttpException('Failed to create SubSeva', HttpStatus.INTERNAL_SERVER_ERROR);
         }

@@ -11,7 +11,6 @@ export class UserRecieptController {
     @Post("/createReciept")
     async createNewSeva(@Body() body: any) {
         const result = await UserRecieptService.Instance.createNewUserReciept(body);
-        console.log("result",result)
         return  result ;
     }
 

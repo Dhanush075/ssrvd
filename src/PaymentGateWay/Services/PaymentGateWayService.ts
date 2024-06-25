@@ -1,6 +1,7 @@
 import { DbContext } from "../../../database/DBContext";
 import { HttpException, HttpStatus } from '@nestjs/common';
 import { IPaymentGateway } from "../model/collections/PaymentGateway";
+import axios from "axios";
 
 const Razorpay = require('razorpay');
 const crypto = require("crypto");
@@ -17,33 +18,53 @@ export class PaymentGatewayService {
     async createOrderInit(body: any) {
         try {
             const dbContext = await DbContext.getContextByConfig();
-            let api_key = {}
-            api_key["key_id"] = process.env.key_id;
-            api_key["key_secret"] = process.env.key_secret;
-            var instance = new Razorpay(api_key);
-
-            body.amount = Number(body.amount);
-
-            let saved: any;
-            let query = {};
-            if (body.amount) {
-                query['amount'] = body.amount;
+            let url = "https://www.switchpay.in/api/createTransaction";
+            let method = "POST";
+            let headers = {
+                'Authorization': '367|qM5tv66Rhk8Tm13DlvDkc92KNwVMvAhOuljLB8tA',
+                'Content-Type': 'multipart/form-data',
+            };
+            const transactionData = {
+                amount: body.amount,
+                description: 'laddu',
+                name: body.name,
+                email: 'dhanushnm07@gmail.com',
+                mobile: body.mobileNumber,
+                enabledModesOfPayment: 'upi',
+                payment_method: 'UPI_INTENT',
+                source: 'api',
+                order_id: body.order_id, // Use the order_id received from the create receipt API
+                user_uuid: 'swp_sm_903dd099-3a9e-4243-ac1e-f83f83c30725',
+                other_info: 'api',
+                encrypt_response: 0
+            };
+            const form = new FormData();
+            for (const key in transactionData) {
+                form.append(key, transactionData[key]);
             }
-            if (body.currency) {
-                query['currency'] = body.currency
-            }
-            if (body.notes) {
-                query['notes'] = body.notes
-            }
+            console.log("form", form)
+            const axiosConfig = {
+                headers: headers,
+                method: method,
+                url: url,
+                data: form
 
-            let order = await this.createRazorpayOrder(instance, query);
-            console.log("order",order)
+            };
+            const order = await axios(axiosConfig)
+            console.log("order", order.data);
+            // const order = await axios.post(url, form, {
+            //     headers: {
+            //         'Authorization': '367|qM5tv66Rhk8Tm13DlvDkc92KNwVMvAhOuljLB8tA',
+            //         'Content-Type': 'multipart/form-data',
+            //     },
+            // });
+            // console.log("order", order.data)
 
             const newOrder = new dbContext.PaymentGateway();
-            newOrder.order_ref = order.id;
-            Object.assign(newOrder, order);
-            saved = await newOrder.save();
-            return order;
+            newOrder.order_id = body.order_id;
+            // newOrder.transaction_id = order.data.transaction_id;
+            let saved = await newOrder.save();
+            return form;
         } catch (error) {
             throw new HttpException('Internal Error', HttpStatus.INTERNAL_SERVER_ERROR);
         }
@@ -75,57 +96,57 @@ export class PaymentGatewayService {
         }
     }
 
-    
-    async verifyTheStatus(verifiction_status: IPaymentGateway) {
-        try {
-            const dbContext = await DbContext.getContextByConfig();
 
-            let body = verifiction_status.razorpay_order_id + "|" + verifiction_status.razorpay_payment_id;
-            var expectedSignature = crypto.createHmac('sha256', process.env.key_secret)
-            .update(body.toString())
-            .digest('hex');
+    // async verifyTheStatus(verifiction_status: IPaymentGateway) {
+    //     try {
+    //         const dbContext = await DbContext.getContextByConfig();
 
-        var response = { "signatureIsValid": "false" }
-        if (expectedSignature === verifiction_status.razorpay_signature) {
-            response = { "signatureIsValid": "true" }
-        }
+    //         let body = verifiction_status.razorpay_order_id + "|" + verifiction_status.razorpay_payment_id;
+    //         var expectedSignature = crypto.createHmac('sha256', process.env.key_secret)
+    //         .update(body.toString())
+    //         .digest('hex');
 
-        if (response.signatureIsValid == "true") {
-            let savedpaymentDetails = await dbContext.PaymentGateway.findOne({
-                "order_ref": verifiction_status.razorpay_order_id
-            });
-            if (savedpaymentDetails) {
-                savedpaymentDetails.is_verified = response.signatureIsValid === 'true';
-                savedpaymentDetails.razorpay_order_id = verifiction_status.razorpay_order_id;
-                savedpaymentDetails.razorpay_payment_id = verifiction_status.razorpay_payment_id;
-                savedpaymentDetails.razorpay_signature = verifiction_status.razorpay_signature;
-                savedpaymentDetails.razorypay_sig_received = verifiction_status.razorpay_signature;
-                savedpaymentDetails.razorypay_sig_generated = expectedSignature;
-                let api_key = {
-                    "key_id": process.env.key_id,
-                    "key_secret": process.env.key_secret
-                }
+    //     var response = { "signatureIsValid": "false" }
+    //     if (expectedSignature === verifiction_status.razorpay_signature) {
+    //         response = { "signatureIsValid": "true" }
+    //     }
 
-                var order_instance = new Razorpay(api_key);
-                await order_instance.orders.fetch(verifiction_status.razorpay_order_id, async function (error, Order) {
-                    let savedpaymentDetails = await dbContext.PaymentGateway.findOne({
-                        "order_ref": verifiction_status.razorpay_order_id
-                    });
-                    if (savedpaymentDetails) {
-                        savedpaymentDetails.status = order_instance.status;
-                        savedpaymentDetails.attempts = order_instance.attempts
-                    }
-                });
-                let result = await savedpaymentDetails.save();
-                return result;
+    //     if (response.signatureIsValid == "true") {
+    //         let savedpaymentDetails = await dbContext.PaymentGateway.findOne({
+    //             "order_ref": verifiction_status.razorpay_order_id
+    //         });
+    //         if (savedpaymentDetails) {
+    //             savedpaymentDetails.is_verified = response.signatureIsValid === 'true';
+    //             savedpaymentDetails.razorpay_order_id = verifiction_status.razorpay_order_id;
+    //             savedpaymentDetails.razorpay_payment_id = verifiction_status.razorpay_payment_id;
+    //             savedpaymentDetails.razorpay_signature = verifiction_status.razorpay_signature;
+    //             savedpaymentDetails.razorypay_sig_received = verifiction_status.razorpay_signature;
+    //             savedpaymentDetails.razorypay_sig_generated = expectedSignature;
+    //             let api_key = {
+    //                 "key_id": process.env.key_id,
+    //                 "key_secret": process.env.key_secret
+    //             }
 
-                }
-            }
-        }
-        catch (error) {
-            throw new HttpException('Could not verify', HttpStatus.INTERNAL_SERVER_ERROR);
-        }
-    }
+    //             var order_instance = new Razorpay(api_key);
+    //             await order_instance.orders.fetch(verifiction_status.razorpay_order_id, async function (error, Order) {
+    //                 let savedpaymentDetails = await dbContext.PaymentGateway.findOne({
+    //                     "order_ref": verifiction_status.razorpay_order_id
+    //                 });
+    //                 if (savedpaymentDetails) {
+    //                     savedpaymentDetails.status = order_instance.status;
+    //                     savedpaymentDetails.attempts = order_instance.attempts
+    //                 }
+    //             });
+    //             let result = await savedpaymentDetails.save();
+    //             return result;
+
+    //             }
+    //         }
+    //     }
+    //     catch (error) {
+    //         throw new HttpException('Could not verify', HttpStatus.INTERNAL_SERVER_ERROR);
+    //     }
+    // }
 
 
 

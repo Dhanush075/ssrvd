@@ -15,7 +15,7 @@ export interface IPaymentGateway extends mongoose.Document{
     currency: string;
     receipt: string;
 
-    offer_id: string;
+    order_id: string;
     status: string;
     
     attempts : number;
@@ -23,9 +23,9 @@ export interface IPaymentGateway extends mongoose.Document{
 
     verifiction_status: string;
     is_verified: boolean;
-    razorpay_payment_id: string;
-    razorpay_order_id: string;
-    razorpay_signature: string;
+    transaction_id: string;
+    transaction_payment_id: string;
+    transaction_signature: string;
     verified_message: string;
     razorypay_sig_received: string;
     razorypay_sig_generated: string;
@@ -47,7 +47,7 @@ export var IPaymentGatewayScheme = new mongoose.Schema({
     currency: { type: String },
     receipt: { type: String },
 
-    offer_id: { type: String },
+    order_id: { type: String },
     status: { type: String },
     entity_id: { type: String },
     settlement_id: { type: String },
@@ -57,9 +57,9 @@ export var IPaymentGatewayScheme = new mongoose.Schema({
 
     verifiction_status: { type: String },
     is_verified: { type: Boolean, default: false },
-    razorpay_payment_id: { type: String },
-    razorpay_order_id: { type: String },
-    razorpay_signature: { type: String },
+    transaction_id: { type: String },
+    transaction_payment_id: { type: String },
+    transaction_signature: { type: String },
     verified_message: { type: String },
 
     razorypay_sig_received: { type: String },
