@@ -187,10 +187,11 @@ export class PaymentGatewayService {
             // };
             // Extract and reorder fields as needed
             const reorderedPayload = {
-                order_id: parsedPayload.order_id,
+                order_id: JSON.stringify(parsedPayload.order_id),
                 request_data: JSON.stringify(parsedPayload.request_data), // Parse request_data to maintain object structure
-                status: parsedPayload.status
+                status: parsedPayload.status(parsedPayload.status)
             };
+            console.log("reorderedPayload",reorderedPayload)
 
             // Convert reorderedPayload to a JSON string for sorting
             const sortedPayload = JSON.stringify(reorderedPayload);
@@ -207,7 +208,7 @@ export class PaymentGatewayService {
             // const sortedKeys = Object.keys(parsedPayload).sort((a, b) => a.localeCompare(b));
             // const sortedPayload = sortedKeys.map(key => parsedPayload[key]).join('');
 
-            console.log("sortedPayload", sortedPayload);
+            console.log("sortedPayload", reorderedPayload);
 
 
 
