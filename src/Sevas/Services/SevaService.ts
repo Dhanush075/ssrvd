@@ -116,7 +116,7 @@ export class SevaService {
             };
 
             const savedSevas = await axios(axiosConfig);
-            console.log("savedSevas",savedSevas.data)
+        
             return savedSevas.data;
         } catch (error) {
             if (error instanceof HttpException) {

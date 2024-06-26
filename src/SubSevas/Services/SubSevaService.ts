@@ -91,7 +91,6 @@ export class SubSevaService {
             };
 
             const savedSubSevas = await axios(axiosConfig);
-            console.log("savedSevas",savedSubSevas.data)
             return savedSubSevas.data;
             
         } catch (error) {
