@@ -180,6 +180,8 @@ export class PaymentGatewayService {
             const parsedPayload = JSON.parse(body.payload);
            
             let checksum = parsedPayload.checksum;
+            delete parsedPayload.checksum;
+
 
             // Step 3: Sort the payload keys and concatenate their values
             const sortedKeys = Object.keys(parsedPayload).sort();
