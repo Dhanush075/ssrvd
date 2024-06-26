@@ -213,7 +213,7 @@ export class PaymentGatewayService {
 
 
             const hmac = crypto.createHmac('sha256', key);
-            const generatedHash = hmac.update(sortedPayload).digest('hex');
+            const generatedHash = hmac.update(reorderedPayload).digest('hex');
             console.log("generatedHash", generatedHash);
             console.log("checksum", checksum);
 
