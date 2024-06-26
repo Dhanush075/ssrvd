@@ -188,7 +188,7 @@ export class PaymentGatewayService {
             // Extract and reorder fields as needed
             const reorderedPayload = {
                 order_id: parsedPayload.order_id,
-                request_data: JSON.parse(parsedPayload.request_data), // Parse request_data to maintain object structure
+                request_data: JSON.stringify(parsedPayload.request_data), // Parse request_data to maintain object structure
                 status: parsedPayload.status
             };
 
