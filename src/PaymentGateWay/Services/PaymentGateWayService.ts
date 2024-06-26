@@ -182,6 +182,7 @@ export class PaymentGatewayService {
             console.log("body.payload.checksum",body.payload.checksum);
             // Step 2: Parse the payload and remove the checksum field
             const parsedPayload = JSON.parse(body.payload);
+            console.log("parsedPayloadbefore deleting",parsedPayload);
             delete parsedPayload.checksum;
             console.log("parsedPayload",parsedPayload);
 
