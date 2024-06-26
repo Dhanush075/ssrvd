@@ -189,7 +189,7 @@ export class PaymentGatewayService {
             const reorderedPayload = {
                 order_id: JSON.stringify(parsedPayload.order_id),
                 request_data: JSON.stringify(parsedPayload.request_data), // Parse request_data to maintain object structure
-                status: parsedPayload.status(parsedPayload.status)
+                status: JSON.stringify(parsedPayload.status)
             };
             console.log("reorderedPayload",reorderedPayload)
 
