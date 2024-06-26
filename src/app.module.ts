@@ -13,6 +13,7 @@ import { SubSevasController } from './SubSevas/Controller/subseva.controller';
 import { UserRecieptController } from './UserReciept/Controller/userreciept.controller';
 import { SevasController } from './Sevas/Controller/seva.controller';
 import { PaymentGatewayController } from './PaymentGateWay/Controller/paymentgateway.controller';
+import { PaymentGatewayService } from './PaymentGateWay/Services/PaymentGateWayService';
 
 
 
@@ -29,6 +30,7 @@ import { PaymentGatewayController } from './PaymentGateWay/Controller/paymentgat
   providers: [
     RequestContextMiddleware,
     RequestContextPreparationService,
+    PaymentGatewayService
    
   ],
 })
