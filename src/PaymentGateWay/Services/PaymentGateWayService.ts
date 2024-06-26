@@ -186,15 +186,14 @@ export class PaymentGatewayService {
             //     status: parsedPayload.status
             // };
             // Extract and reorder fields as needed
-            const reorderedPayload = {
-                order_id: JSON.stringify(parsedPayload.order_id),
-                request_data: JSON.stringify(parsedPayload.request_data), // Parse request_data to maintain object structure
-                status: JSON.stringify(parsedPayload.status)
+            const transformedPayload = {
+                order_id: parsedPayload.order_id,
+                request_data: parsedPayload.request_data,
+                status: parsedPayload.status
             };
-            console.log("reorderedPayload",reorderedPayload)
-
-            // Convert reorderedPayload to a JSON string for sorting
-            const sortedPayload = JSON.stringify(reorderedPayload);
+            
+            // Convert transformedPayload to a JSON string
+            const sortedPayload = JSON.stringify(transformedPayload);
 
             // // Sort and stringify the reordered payload
             // const sortedKeys = Object.keys(reorderedPayload).sort((a, b) => a.localeCompare(b));
@@ -208,12 +207,12 @@ export class PaymentGatewayService {
             // const sortedKeys = Object.keys(parsedPayload).sort((a, b) => a.localeCompare(b));
             // const sortedPayload = sortedKeys.map(key => parsedPayload[key]).join('');
 
-            console.log("sortedPayload", reorderedPayload);
+            console.log("sortedPayload", sortedPayload);
 
 
 
             const hmac = crypto.createHmac('sha256', key);
-            const generatedHash = hmac.update(reorderedPayload).digest('hex');
+            const generatedHash = hmac.update(sortedPayload).digest('hex');
             console.log("generatedHash", generatedHash);
             console.log("checksum", checksum);
 
