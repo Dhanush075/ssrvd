@@ -176,23 +176,22 @@ export class PaymentGatewayService {
             const dbContext = await DbContext.getContextByConfig();
             const tokenToHash = process.env.Bearer_Secret;
             const key = crypto.createHash('sha256').update(tokenToHash).digest('hex');
-            // Step 2: Parse the payload and remove the checksum field
             const parsedPayload = JSON.parse(body.payload);
            
             let checksum = parsedPayload.checksum;
             delete parsedPayload.checksum;
 
-
-            // Step 3: Sort the payload keys and concatenate their values
             const sortedKeys = Object.keys(parsedPayload).sort();
             const sortedPayload = sortedKeys.map(key => parsedPayload[key]).join('');
+            console.log("sortedPayload",sortedPayload);
+        
 
-            // Step 4: Generate the HMAC SHA-256 hash
+         
             const hmac = crypto.createHmac('sha256', key);
             const generatedHash = hmac.update(sortedPayload).digest('hex');
             console.log("generatedHash",generatedHash);
             console.log("checksum",checksum);
-            // Step 5: Compare the generated hash with the provided checksum
+        
             if (generatedHash === checksum) {
                 console.log("successful");
                 const payment = await dbContext.PaymentGateway.updateOne({transaction_id: body.payload.order_id}, { $set: {status: body.payload.status, request_data: body.payload.request_data, checksum: body.payload.checksum }});
