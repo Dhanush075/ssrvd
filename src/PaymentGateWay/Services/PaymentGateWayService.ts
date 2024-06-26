@@ -178,9 +178,12 @@ export class PaymentGatewayService {
             const key = crypto.createHash('sha256').update(tokenToHash).digest('hex');
             console.log("body",body);
 
+            console.log("body.payload",body.payload);
+            console.log("body.payload.checksum",body.payload.checksum);
             // Step 2: Parse the payload and remove the checksum field
             const parsedPayload = JSON.parse(body.payload);
             delete parsedPayload.checksum;
+            console.log("parsedPayload",parsedPayload);
 
             // Step 3: Sort the payload keys and concatenate their values
             const sortedKeys = Object.keys(parsedPayload).sort();
