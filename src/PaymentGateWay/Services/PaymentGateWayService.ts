@@ -171,64 +171,6 @@ export class PaymentGatewayService {
 
 
 
-    // async verifyChecksum(body: any) {
-    //     try {
-    //         const dbContext = await DbContext.getContextByConfig();
-    //         const tokenToHash = process.env.Bearer_Secret;
-    //         const key = crypto.createHash('sha256').update(tokenToHash).digest('hex');
-    //         const parsedPayload = JSON.parse(body.payload);
-
-    //         let checksum = parsedPayload.checksum;
-    //         delete parsedPayload.checksum;
-    //         // const reorderedPayload = {
-    //         //     order_id: parsedPayload.order_id,
-    //         //     request_data: parsedPayload.request_data,
-    //         //     status: parsedPayload.status
-    //         // };
-    //         // Extract and reorder fields as needed
-    //         const reorderedPayload = {
-    //             order_id: parsedPayload.order_id,
-    //             request_data: JSON.parse(parsedPayload.request_data), // Parse request_data to maintain object structure
-    //             status: parsedPayload.status
-    //         };
-
-    //         // Convert reorderedPayload to a JSON string for sorting
-    //         const sortedPayload = JSON.stringify(reorderedPayload);
-
-    //         // // Sort and stringify the reordered payload
-    //         // const sortedKeys = Object.keys(reorderedPayload).sort((a, b) => a.localeCompare(b));
-    //         // const sortedPayload = sortedKeys.map(key => {
-    //         //     if (typeof reorderedPayload[key] === 'object') {
-    //         //         return JSON.stringify(reorderedPayload[key]);
-    //         //     }
-    //         //     return reorderedPayload[key];
-    //         // }).join('');
-
-    //         // const sortedKeys = Object.keys(parsedPayload).sort((a, b) => a.localeCompare(b));
-    //         // const sortedPayload = sortedKeys.map(key => parsedPayload[key]).join('');
-
-    //         console.log("sortedPayload", sortedPayload);
-
-
-
-    //         const hmac = crypto.createHmac('sha256', key);
-    //         const generatedHash = hmac.update(sortedPayload).digest('hex');
-    //         console.log("generatedHash", generatedHash);
-    //         console.log("checksum", checksum);
-
-    //         if (generatedHash === checksum) {
-    //             console.log("successful");
-    //             const payment = await dbContext.PaymentGateway.updateOne({ transaction_id: parsedPayload.order_id }, { $set: { status: parsedPayload.status, request_data: parsedPayload.request_data, checksum: checksum } });
-    //             return true;
-    //         }
-    //         else {
-    //             return false;
-    //         }
-    //     } catch (error) {
-    //         throw new HttpException('Failed to Verfiy Payment', HttpStatus.INTERNAL_SERVER_ERROR);
-    //     }
-    // }
-
     async verifyChecksum(body: any) {
         try {
             const dbContext = await DbContext.getContextByConfig();
@@ -238,53 +180,55 @@ export class PaymentGatewayService {
 
             let checksum = parsedPayload.checksum;
             delete parsedPayload.checksum;
+            // const reorderedPayload = {
+            //     order_id: parsedPayload.order_id,
+            //     request_data: parsedPayload.request_data,
+            //     status: parsedPayload.status
+            // };
+            // Extract and reorder fields as needed
+            const reorderedPayload = {
+                order_id: parsedPayload.order_id,
+                request_data: JSON.parse(parsedPayload.request_data), // Parse request_data to maintain object structure
+                status: parsedPayload.status
+            };
 
-            // Extract keys and sort them alphabetically
-            const sortedKeys = Object.keys(parsedPayload).sort((a, b) => a.localeCompare(b));
+            // Convert reorderedPayload to a JSON string for sorting
+            const sortedPayload = JSON.stringify(reorderedPayload);
 
-            // Create sorted JSON string representation
-            const sortedPayloadString = sortedKeys.map(key => {
-                if (typeof parsedPayload[key] === 'object') {
-                    // Handle nested objects by stringifying them
-                    return `"${key}":${JSON.stringify(parsedPayload[key])}`;
-                } else {
-                    // Otherwise, stringify key-value pair
-                    return `"${key}":"${parsedPayload[key]}"`;
-                }
-            }).join(',');
+            // // Sort and stringify the reordered payload
+            // const sortedKeys = Object.keys(reorderedPayload).sort((a, b) => a.localeCompare(b));
+            // const sortedPayload = sortedKeys.map(key => {
+            //     if (typeof reorderedPayload[key] === 'object') {
+            //         return JSON.stringify(reorderedPayload[key]);
+            //     }
+            //     return reorderedPayload[key];
+            // }).join('');
 
-            // Construct the final sorted JSON object
-            const sortedPayload = `{${sortedPayloadString}}`;
+            // const sortedKeys = Object.keys(parsedPayload).sort((a, b) => a.localeCompare(b));
+            // const sortedPayload = sortedKeys.map(key => parsedPayload[key]).join('');
 
-            // Log sortedPayload to ensure correct structure (for debugging)
-            console.log("sortedPayload:", sortedPayload);
+            console.log("sortedPayload", sortedPayload);
 
-            // Convert sortedPayload to JSON string for hashing
-            const sortedPayloadForHashing = JSON.stringify(sortedPayload);
+
 
             const hmac = crypto.createHmac('sha256', key);
-            const generatedHash = hmac.update(sortedPayloadForHashing).digest('hex');
+            const generatedHash = hmac.update(sortedPayload).digest('hex');
             console.log("generatedHash", generatedHash);
             console.log("checksum", checksum);
+
             if (generatedHash === checksum) {
-                console.log("Checksum verification successful");
-                const payment = await dbContext.PaymentGateway.updateOne({ transaction_id: parsedPayload.order_id }, {
-                    $set: {
-                        status: parsedPayload.status,
-                        request_data: parsedPayload.request_data,
-                        checksum: parsedPayload.checksum
-                    }
-                });
+                console.log("successful");
+                const payment = await dbContext.PaymentGateway.updateOne({ transaction_id: parsedPayload.order_id }, { $set: { status: parsedPayload.status, request_data: parsedPayload.request_data, checksum: checksum } });
                 return true;
-            } else {
-                console.log("Checksum verification failed");
+            }
+            else {
                 return false;
             }
         } catch (error) {
-            console.error("Failed to verify checksum:", error);
-            throw new HttpException('Failed to Verify Payment', HttpStatus.INTERNAL_SERVER_ERROR);
+            throw new HttpException('Failed to Verfiy Payment', HttpStatus.INTERNAL_SERVER_ERROR);
         }
     }
+
 
 
 
