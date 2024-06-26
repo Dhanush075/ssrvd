@@ -181,8 +181,9 @@ export class PaymentGatewayService {
             let checksum = parsedPayload.checksum;
             delete parsedPayload.checksum;
 
-            const sortedKeys = Object.keys(parsedPayload).sort();
+            const sortedKeys = Object.keys(parsedPayload).sort((a, b) => a.localeCompare(b));
             const sortedPayload = sortedKeys.map(key => parsedPayload[key]).join('');
+            
             console.log("sortedPayload",sortedPayload);
         
 
