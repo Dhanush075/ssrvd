@@ -170,4 +170,38 @@ export class PaymentGatewayService {
 
 
 
+    async verifyChecksum(body: any) {
+        try {
+            const dbContext = await DbContext.getContextByConfig();
+            const tokenToHash = process.env.Bearer_Secret;
+            const key = crypto.createHash('sha256').update(tokenToHash).digest('hex');
+
+            // Step 2: Parse the payload and remove the checksum field
+            const parsedPayload = JSON.parse(body.payload);
+            delete parsedPayload.checksum;
+
+            // Step 3: Sort the payload keys and concatenate their values
+            const sortedKeys = Object.keys(parsedPayload).sort();
+            const sortedPayload = sortedKeys.map(key => parsedPayload[key]).join('');
+
+            // Step 4: Generate the HMAC SHA-256 hash
+            const hmac = crypto.createHmac('sha256', key);
+            const generatedHash = hmac.update(sortedPayload).digest('hex');
+
+            // Step 5: Compare the generated hash with the provided checksum
+            if (generatedHash === body.payload.checksum) {
+                const payment = await dbContext.PaymentGateway.updateOne({transaction_id: body.payload.order_id}, { $set: {status: body.payload.status, request_data: body.payload.request_data, checksum: body.payload.checksum }});
+                return true;
+            }
+            else{
+                return false;
+            }
+        } catch (error) {
+            throw new HttpException('Failed to Verfiy Payment', HttpStatus.INTERNAL_SERVER_ERROR);
+        }
+    }
+
+
+
+
 }

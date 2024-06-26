@@ -33,9 +33,14 @@ export class PaymentGatewayController {
 
     @Post('callback')
     async handleCallback(@Body() body: any): Promise<any> {
-        const { checksum, ...otherData } = body;
-        console.log("body",body)
-        return body;
+        const verifyChecksum = await PaymentGatewayService.Instance.verifyChecksum(body)
+        if (verifyChecksum) {
+
+            return { success: true, message: 'Payment successful' };
+        } else {
+            // Checksum verification failed, return 400 Bad Request
+            throw new HttpException({ success: false, message: 'Payment failed' }, HttpStatus.BAD_REQUEST);
+        }
     }
 }
 

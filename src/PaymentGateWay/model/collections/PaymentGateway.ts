@@ -31,6 +31,8 @@ export interface IPaymentGateway extends mongoose.Document {
     verified_message: string;
     razorypay_sig_received: string;
     razorypay_sig_generated: string;
+    checksum: string;
+    request_data: any;
 
 
     __ref: string;
@@ -65,6 +67,8 @@ export var IPaymentGatewayScheme = new mongoose.Schema({
     transaction_payment_id: { type: String },
     transaction_signature: { type: String },
     verified_message: { type: String },
+    checkum: { type: String },
+    request_data: { type: Object },
 
     razorypay_sig_received: { type: String },
     razorypay_sig_generated: { type: String },
