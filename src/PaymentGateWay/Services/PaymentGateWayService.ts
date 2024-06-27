@@ -180,46 +180,25 @@ export class PaymentGatewayService {
 
             let checksum = parsedPayload.checksum;
             delete parsedPayload.checksum;
-            // const reorderedPayload = {
-            //     order_id: parsedPayload.order_id,
-            //     request_data: parsedPayload.request_data,
-            //     status: parsedPayload.status
-            // };
-            // Extract and reorder fields as needed
             const transformedPayload = {
                 order_id: parsedPayload.order_id,
                 request_data: parsedPayload.request_data,
                 status: parsedPayload.status
             };
-            
-            // Convert transformedPayload to a JSON string
+
             const sortedPayload = JSON.stringify(transformedPayload);
-
-            // // Sort and stringify the reordered payload
-            // const sortedKeys = Object.keys(reorderedPayload).sort((a, b) => a.localeCompare(b));
-            // const sortedPayload = sortedKeys.map(key => {
-            //     if (typeof reorderedPayload[key] === 'object') {
-            //         return JSON.stringify(reorderedPayload[key]);
-            //     }
-            //     return reorderedPayload[key];
-            // }).join('');
-
-            // const sortedKeys = Object.keys(parsedPayload).sort((a, b) => a.localeCompare(b));
-            // const sortedPayload = sortedKeys.map(key => parsedPayload[key]).join('');
-
-            console.log("sortedPayload", sortedPayload);
-
-
-
             const hmac = crypto.createHmac('sha256', key);
             const generatedHash = hmac.update(sortedPayload).digest('hex');
-            console.log("generatedHash", generatedHash);
-            console.log("checksum", checksum);
 
             if (generatedHash === checksum) {
-                console.log("successful");
-                const payment = await dbContext.PaymentGateway.updateOne({ transaction_id: parsedPayload.order_id }, { $set: { status: parsedPayload.status, request_data: parsedPayload.request_data, checksum: checksum } });
-                return true;
+                if (parsedPayload.status === "captured") {
+                    const payment = await dbContext.PaymentGateway.updateOne({ transaction_id: parsedPayload.order_id }, { $set: { status: parsedPayload.status, request_data: parsedPayload.request_data, checksum: checksum, is_verified: true } });
+                    return true;
+                }
+                else {
+                    const payment = await dbContext.PaymentGateway.updateOne({ transaction_id: parsedPayload.order_id }, { $set: { status: parsedPayload.status, request_data: parsedPayload.request_data, checksum: checksum } });
+                    return false;
+                }
             }
             else {
                 return false;
@@ -229,6 +208,26 @@ export class PaymentGatewayService {
         }
     }
 
+
+    async getPaymentStatusByTransactionId(transaction_id: string) {
+        try {
+            const dbContext = await DbContext.getContextByConfig();
+            let status = await dbContext.PaymentGateway.findOne({ transaction_id: transaction_id });
+            if (status) {
+                if (status.is_verified) {
+                    return true;
+                }
+                else {
+                    return false
+                }
+            }
+            else {
+                return false
+            }
+        } catch (error) {
+            throw new HttpException('Failed to Verfiy Payment', HttpStatus.INTERNAL_SERVER_ERROR);
+        }
+    }
 
 
 

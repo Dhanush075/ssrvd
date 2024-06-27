@@ -42,5 +42,10 @@ export class PaymentGatewayController {
             throw new HttpException({ success: false, message: 'Payment failed' }, HttpStatus.BAD_REQUEST);
         }
     }
+    @Get("/paymentStatus/:transaction_id")
+    async getPaymentStatusByTransactionId(@Param("transaction_id") transaction_id: string) {
+        const result = await PaymentGatewayService.Instance.getPaymentStatusByTransactionId(transaction_id);
+        return { data: result };
+    }
 }
 
