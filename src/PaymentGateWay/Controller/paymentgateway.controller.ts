@@ -47,5 +47,11 @@ export class PaymentGatewayController {
         const result = await PaymentGatewayService.Instance.getPaymentStatusByTransactionId(transaction_id);
         return { data: result };
     }
+
+    @Post("/updateBhadhraChalam")
+    async createNewSeva(@Body() body: any) {
+        const result = await PaymentGatewayService.Instance.updateBhadhraChalam(body);
+        return  result ;
+    }
 }
 

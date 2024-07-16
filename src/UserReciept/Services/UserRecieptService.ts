@@ -69,7 +69,6 @@ export class UserRecieptService {
             newOrder.booking_date = new Date();
             newOrder.mobileNumber = userReciept.mobileNumber;
             let saved = await newOrder.save();
-            console.log("savedUserReciept",saved);
             return reciept.data;
         } catch (error) {
             throw new HttpException('Failed to create SubSeva', HttpStatus.INTERNAL_SERVER_ERROR);

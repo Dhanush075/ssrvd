@@ -229,6 +229,31 @@ export class PaymentGatewayService {
         }
     }
 
+    
+    async updateBhadhraChalam(body: any) {
+        try {
+            const dbContext = await DbContext.getContextByConfig();
+            let url = "https://bhadradritemple.telangana.gov.in/apis/api.php";
+            let method = "POST";
+            let headers = {
+                'Apikey': 'a9e0f8a33497dbe0de8ea0e154d2a090',
+                'Content-Type': 'application/json',
+                'Ver': '1.0'
+            };
+            const axiosConfig = {
+                headers: headers,
+                method: method,
+                url: url,
+                data: body
+
+            };     
+            let reciept = await axios(axiosConfig);
+            return reciept.data;
+        } catch (error) {
+            throw new HttpException('Failed to create SubSeva', HttpStatus.INTERNAL_SERVER_ERROR);
+        }
+    }
+
 
 
 }
