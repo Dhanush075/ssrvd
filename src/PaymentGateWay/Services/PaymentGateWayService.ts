@@ -15,59 +15,108 @@ export class PaymentGatewayService {
         return this._instance;
     }
 
+    // async createOrderInit(body: any) {
+    //     try {
+    //         const dbContext = await DbContext.getContextByConfig();
+    //         let url = "https://www.switchpay.in/api/createTransaction";
+    //         let method = "POST";
+    //         let headers = {
+    //             'Authorization': '367|qM5tv66Rhk8Tm13DlvDkc92KNwVMvAhOuljLB8tA',
+    //             'Content-Type': 'multipart/form-data',
+    //         };
+    //         const transactionData = {
+    //             amount: body.amount,
+    //             description: 'laddu',
+    //             name: body.name,
+    //             email: 'dhanushnm07@gmail.com',
+    //             mobile: body.mobileNumber,
+    //             enabledModesOfPayment: 'upi',
+    //             payment_method: 'UPI_INTENT',
+    //             source: 'api',
+    //             order_id: body.order_id, // Use the order_id received from the create receipt API
+    //             user_uuid: 'swp_sm_903dd099-3a9e-4243-ac1e-f83f83c30725',
+    //             other_info: 'api',
+    //             encrypt_response: 0
+    //         };
+    //         const form = new FormData();
+    //         for (const key in transactionData) {
+    //             form.append(key, transactionData[key]);
+    //             let abc = form.append(key, transactionData[key]);
+    //             console.log
+    //         }
+    //         console.log("form", form)
+    //         const axiosConfig = {
+    //             headers: headers,
+    //             method: method,
+    //             url: url,
+    //             data: form
+
+    //         };
+    //         const order = await axios(axiosConfig)
+    //         console.log("order", order.data);
+    //         // const order = await axios.post(url, form, {
+    //         //     headers: {
+    //         //         'Authorization': '367|qM5tv66Rhk8Tm13DlvDkc92KNwVMvAhOuljLB8tA',
+    //         //         'Content-Type': 'multipart/form-data',
+    //         //     },
+    //         // });
+    //         // console.log("order", order.data)
+
+    //         const newOrder = new dbContext.PaymentGateway();
+    //         newOrder.order_id = body.order_id;
+    //         // newOrder.transaction_id = order.data.transaction_id;
+    //         let saved = await newOrder.save();
+    //         return form;
+    //     } catch (error) {
+    //         throw new HttpException('Internal Error', HttpStatus.INTERNAL_SERVER_ERROR);
+    //     }
+    // }
+
     async createOrderInit(body: any) {
         try {
             const dbContext = await DbContext.getContextByConfig();
-            let url = "https://www.switchpay.in/api/createTransaction";
-            let method = "POST";
-            let headers = {
-                'Authorization': '367|qM5tv66Rhk8Tm13DlvDkc92KNwVMvAhOuljLB8tA',
-                'Content-Type': 'multipart/form-data',
-            };
-            const transactionData = {
-                amount: body.amount,
-                description: 'laddu',
-                name: body.name,
-                email: 'dhanushnm07@gmail.com',
-                mobile: body.mobileNumber,
-                enabledModesOfPayment: 'upi',
-                payment_method: 'UPI_INTENT',
-                source: 'api',
-                order_id: body.order_id, // Use the order_id received from the create receipt API
-                user_uuid: 'swp_sm_903dd099-3a9e-4243-ac1e-f83f83c30725',
-                other_info: 'api',
-                encrypt_response: 0
-            };
-            const form = new FormData();
-            for (const key in transactionData) {
-                form.append(key, transactionData[key]);
-                let abc = form.append(key, transactionData[key]);
-                console.log
-            }
-            console.log("form", form)
-            const axiosConfig = {
-                headers: headers,
-                method: method,
-                url: url,
-                data: form
 
-            };
-            const order = await axios(axiosConfig)
-            console.log("order", order.data);
-            // const order = await axios.post(url, form, {
-            //     headers: {
-            //         'Authorization': '367|qM5tv66Rhk8Tm13DlvDkc92KNwVMvAhOuljLB8tA',
-            //         'Content-Type': 'multipart/form-data',
-            //     },
-            // });
-            // console.log("order", order.data)
+            //create Instantiate Razorpay
+            // let api_key = {
+            //     "key_id": API_KEY.key_id,
+            //     "key_secret": API_KEY.key_secret
+            // }
+            let api_key = {}
+            api_key["key_id"] = process.env.key_id;
+            api_key["key_secret"] = process.env.key_secret
+
+            var instance = new Razorpay(api_key);
+
+            body.amount = Number(body.amount);
+
+            //server-side Generate Order
+            let saved: any;
+            let query = {};
+            if (body.amount) {
+                query['amount'] = body.amount;
+            }
+            if (body.currency) {
+                query['currency'] = body.currency
+            }
+            if (body.notes) {
+                query['receipt'] = body.receipt
+            }
+            // if (order_item.store_id) {
+            //     query['store_id'] = order_item.store_id;
+            // }
+
+
+
+            // let order: any = await this.getORderData(instance,order_item,dbContext);
+            let order = await this.createRazorpayOrder(instance, query);
 
             const newOrder = new dbContext.PaymentGateway();
-            newOrder.order_id = body.order_id;
-            // newOrder.transaction_id = order.data.transaction_id;
-            let saved = await newOrder.save();
-            return form;
-        } catch (error) {
+            Object.assign(newOrder, order);
+            newOrder.order_ref = order.id;
+            saved = await newOrder.save();
+            return order;
+        }
+        catch (error) {
             throw new HttpException('Internal Error', HttpStatus.INTERNAL_SERVER_ERROR);
         }
     }
@@ -169,6 +218,28 @@ export class PaymentGatewayService {
     //     }
     // }
 
+    async verifyTheStatus(body: any) {
+        try {
+            const { razorpay_payment_id, razorpay_order_id, razorpay_signature } = body;
+
+            // Verify payment signature using Razorpay SDK
+            const crypto = require('crypto');
+            const secret = process.env.key_secret;
+            const hmac = crypto.createHmac('sha256', secret);
+
+            hmac.update(razorpay_order_id + '|' + razorpay_payment_id);
+            const generated_signature = hmac.digest('hex');
+
+            if (generated_signature === razorpay_signature) {
+                return { success: true };
+            } else {
+                return { success: false };
+            }
+        }
+        catch (error) {
+            throw new HttpException('Could not verify', HttpStatus.INTERNAL_SERVER_ERROR);
+        }
+    }
 
 
     async verifyChecksum(body: any) {
@@ -229,7 +300,7 @@ export class PaymentGatewayService {
         }
     }
 
-    
+
     async updateBhadhraChalam(body: any) {
         try {
             const dbContext = await DbContext.getContextByConfig();
@@ -246,7 +317,7 @@ export class PaymentGatewayService {
                 url: url,
                 data: body
 
-            };     
+            };
             let reciept = await axios(axiosConfig);
             return reciept.data;
         } catch (error) {
