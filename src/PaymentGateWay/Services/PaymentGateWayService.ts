@@ -2,6 +2,7 @@ import { DbContext } from "../../../database/DBContext";
 import { HttpException, HttpStatus } from '@nestjs/common';
 import { IPaymentGateway } from "../model/collections/PaymentGateway";
 import axios from "axios";
+import { validatePaymentVerification } from "razorpay/dist/utils/razorpay-utils";
 
 const Razorpay = require('razorpay');
 const crypto = require("crypto");
@@ -269,16 +270,16 @@ export class PaymentGatewayService {
         try {
             const { razorpay_payment_id, razorpay_order_id, razorpay_signature } = body;
             console.log("Body",body)
-
+            let key_secret = "Tm1FIpc8oEzosTrmkx23Rwbf"
             // Verify payment signature using Razorpay SDK
-            const crypto = require('crypto');
-            const secret = process.env.key_secret;
-            const hmac = crypto.createHmac('sha256', secret);
+            const isPaymentVerified = await validatePaymentVerification(
+                {order_id: razorpay_order_id, payment_id: razorpay_payment_id},
+                razorpay_signature,
+                key_secret
+            )
+         
 
-            hmac.update(razorpay_order_id + '|' + razorpay_payment_id);
-            const generated_signature = hmac.digest('hex');
-
-            if (generated_signature === razorpay_signature) {
+            if (isPaymentVerified) {
                 return { success: true };
             } else {
                 return { success: false };
