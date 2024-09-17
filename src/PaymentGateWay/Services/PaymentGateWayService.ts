@@ -125,9 +125,9 @@ export class PaymentGatewayService {
     
             // Instantiate Razorpay with API keys
             const api_key = {
-                key_id: process.env.key_id,
-                key_secret: process.env.key_secret
-            };
+                "key_id": "rzp_test_Os0xGiUl4xP5xB",
+                "key_secret": "Tm1FIpc8oEzosTrmkx23Rwbf"
+              }
     
             if (!api_key.key_id || !api_key.key_secret) {
                 throw new HttpException('Razorpay API keys are missing', HttpStatus.INTERNAL_SERVER_ERROR);
