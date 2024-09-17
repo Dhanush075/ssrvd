@@ -72,54 +72,101 @@ export class PaymentGatewayService {
     //     }
     // }
 
+    // async createOrderInit(body: any) {
+    //     try {
+    //         const dbContext = await DbContext.getContextByConfig();
+
+    //         //create Instantiate Razorpay
+    //         // let api_key = {
+    //         //     "key_id": API_KEY.key_id,
+    //         //     "key_secret": API_KEY.key_secret
+    //         // }
+    //         let api_key = {}
+    //         api_key["key_id"] = process.env.key_id;
+    //         api_key["key_secret"] = process.env.key_secret
+
+    //         console.log(api_key)
+
+    //         var instance = new Razorpay(api_key);
+    //         console.log("instance",instance)
+
+    //         body.amount = Number(body.amount);
+
+    //         //server-side Generate Order
+    //         let saved: any;
+    //         let query = {};
+    //         if (body.amount) {
+    //             query['amount'] = body.amount;
+    //         }
+    //         if (body.currency) {
+    //             query['currency'] = body.currency
+    //         }
+    //         if (body.receipt) {
+    //             query['receipt'] = body.receipt
+    //         }
+    //         console.log(query);
+    //         let order =  await instance.orders.create(query)
+    //         console.log("order",order)
+
+    //         const newOrder = new dbContext.PaymentGateway();
+    //         Object.assign(newOrder, order);
+    //         newOrder.order_ref = order.id;
+    //         saved = await newOrder.save();
+    //         return order;
+    //     }
+    //     catch (error) {
+    //         throw new HttpException('Internal Error', HttpStatus.INTERNAL_SERVER_ERROR);
+    //     }
+    // }
+
     async createOrderInit(body: any) {
         try {
             const dbContext = await DbContext.getContextByConfig();
-
-            //create Instantiate Razorpay
-            // let api_key = {
-            //     "key_id": API_KEY.key_id,
-            //     "key_secret": API_KEY.key_secret
-            // }
-            let api_key = {}
-            api_key["key_id"] = process.env.key_id;
-            api_key["key_secret"] = process.env.key_secret
-
+    
+            // Instantiate Razorpay with API keys
+            const api_key = {
+                key_id: process.env.key_id,
+                key_secret: process.env.key_secret
+            };
+    
+            if (!api_key.key_id || !api_key.key_secret) {
+                throw new HttpException('Razorpay API keys are missing', HttpStatus.INTERNAL_SERVER_ERROR);
+            }
+    
             var instance = new Razorpay(api_key);
-
-            body.amount = Number(body.amount);
-
-            //server-side Generate Order
-            let saved: any;
-            let query = {};
-            if (body.amount) {
-                query['amount'] = body.amount;
+    
+            // Ensure amount is converted to paise (for INR transactions)
+            let amountInPaise = Number(body.amount) * 100; // Convert to paise
+    
+            if (amountInPaise < 100) {
+                throw new HttpException('Order amount must be at least ₹1', HttpStatus.BAD_REQUEST);
             }
-            if (body.currency) {
-                query['currency'] = body.currency
-            }
-            if (body.notes) {
-                query['receipt'] = body.receipt
-            }
-            // if (order_item.store_id) {
-            //     query['store_id'] = order_item.store_id;
-            // }
-
-
-
-            // let order: any = await this.getORderData(instance,order_item,dbContext);
-            let order = await this.createRazorpayOrder(instance, query);
-
+    
+            // Validate and construct query for Razorpay order creation
+            const query: any = {
+                amount: amountInPaise,
+                currency: body.currency || 'INR',
+                receipt: body.receipt || `receipt_${Date.now()}`
+            };
+    
+            // Generate Razorpay Order
+            const order = await instance.orders.create(query);
+            console.log('Order Created:', order);
+    
+            // Save order details to the database
             const newOrder = new dbContext.PaymentGateway();
             Object.assign(newOrder, order);
-            newOrder.order_ref = order.id;
-            saved = await newOrder.save();
+            newOrder.order_ref = order.id;  // Store order reference
+            const saved = await newOrder.save();
+    
+            console.log('Order Saved to DB:', saved);
             return order;
-        }
-        catch (error) {
+        } catch (error) {
+            console.error('Error in createOrderInit:', error);
             throw new HttpException('Internal Error', HttpStatus.INTERNAL_SERVER_ERROR);
         }
     }
+    
 
     async createRazorpayOrder(instance: any, orderItesm: any): Promise<any> {
         return new Promise(async (resolve, reject) => {
