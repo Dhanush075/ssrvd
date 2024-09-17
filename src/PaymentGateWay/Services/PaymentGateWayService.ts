@@ -268,6 +268,7 @@ export class PaymentGatewayService {
     async verifyTheStatus(body: any) {
         try {
             const { razorpay_payment_id, razorpay_order_id, razorpay_signature } = body;
+            console.log("Body",body)
 
             // Verify payment signature using Razorpay SDK
             const crypto = require('crypto');
