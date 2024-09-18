@@ -1,5 +1,5 @@
 import { DbContext } from "../../../database/DBContext";
-import { HttpException, HttpStatus } from '@nestjs/common';
+import { HttpException, HttpStatus, Req, Res } from '@nestjs/common';
 import { IPaymentGateway } from "../model/collections/PaymentGateway";
 import axios from "axios";
 import { validatePaymentVerification } from "razorpay/dist/utils/razorpay-utils";
@@ -120,54 +120,54 @@ export class PaymentGatewayService {
     //     }
     // }
 
-    async createOrderInit(body: any) {
-        try {
-            const dbContext = await DbContext.getContextByConfig();
-    
-            // Instantiate Razorpay with API keys
-            const api_key = {
-                "key_id": "rzp_test_Os0xGiUl4xP5xB",
-                "key_secret": "Tm1FIpc8oEzosTrmkx23Rwbf"
-              }
-    
-            if (!api_key.key_id || !api_key.key_secret) {
-                throw new HttpException('Razorpay API keys are missing', HttpStatus.INTERNAL_SERVER_ERROR);
-            }
-    
-            var instance = new Razorpay(api_key);
-    
-            // Ensure amount is converted to paise (for INR transactions)
-            let amountInPaise = Number(body.amount) * 100; // Convert to paise
-    
-            if (amountInPaise < 100) {
-                throw new HttpException('Order amount must be at least ₹1', HttpStatus.BAD_REQUEST);
-            }
-    
-            // Validate and construct query for Razorpay order creation
-            const query: any = {
-                amount: amountInPaise,
-                currency: body.currency || 'INR',
-                receipt: body.receipt || `receipt_${Date.now()}`
-            };
-    
-            // Generate Razorpay Order
-            const order = await instance.orders.create(query);
-            console.log('Order Created:', order);
-    
-            // Save order details to the database
-            const newOrder = new dbContext.PaymentGateway();
-            Object.assign(newOrder, order);
-            newOrder.order_ref = order.id;  // Store order reference
-            const saved = await newOrder.save();
-    
-            console.log('Order Saved to DB:', saved);
-            return order;
-        } catch (error) {
-            console.error('Error in createOrderInit:', error);
-            throw new HttpException('Internal Error', HttpStatus.INTERNAL_SERVER_ERROR);
-        }
-    }
-    
+    // async createOrderInit(body: any) {
+    //     try {
+    //         const dbContext = await DbContext.getContextByConfig();
+
+    //         // Instantiate Razorpay with API keys
+    //         const api_key = {
+    //             "key_id": "rzp_test_Os0xGiUl4xP5xB",
+    //             "key_secret": "Tm1FIpc8oEzosTrmkx23Rwbf"
+    //           }
+
+    //         if (!api_key.key_id || !api_key.key_secret) {
+    //             throw new HttpException('Razorpay API keys are missing', HttpStatus.INTERNAL_SERVER_ERROR);
+    //         }
+
+    //         var instance = new Razorpay(api_key);
+
+    //         // Ensure amount is converted to paise (for INR transactions)
+    //         let amountInPaise = Number(body.amount) * 100; // Convert to paise
+
+    //         if (amountInPaise < 100) {
+    //             throw new HttpException('Order amount must be at least ₹1', HttpStatus.BAD_REQUEST);
+    //         }
+
+    //         // Validate and construct query for Razorpay order creation
+    //         const query: any = {
+    //             amount: amountInPaise,
+    //             currency: body.currency || 'INR',
+    //             receipt: body.receipt || `receipt_${Date.now()}`
+    //         };
+
+    //         // Generate Razorpay Order
+    //         const order = await instance.orders.create(query);
+    //         console.log('Order Created:', order);
+
+    //         // Save order details to the database
+    //         const newOrder = new dbContext.PaymentGateway();
+    //         Object.assign(newOrder, order);
+    //         newOrder.order_ref = order.id;  // Store order reference
+    //         const saved = await newOrder.save();
+
+    //         console.log('Order Saved to DB:', saved);
+    //         return order;
+    //     } catch (error) {
+    //         console.error('Error in createOrderInit:', error);
+    //         throw new HttpException('Internal Error', HttpStatus.INTERNAL_SERVER_ERROR);
+    //     }
+    // }
+
 
     async createRazorpayOrder(instance: any, orderItesm: any): Promise<any> {
         return new Promise(async (resolve, reject) => {
@@ -269,15 +269,15 @@ export class PaymentGatewayService {
     async verifyTheStatus(body: any) {
         try {
             const { razorpay_payment_id, razorpay_order_id, razorpay_signature } = body;
-            console.log("Body",body)
+            console.log("Body", body)
             let key_secret = "Tm1FIpc8oEzosTrmkx23Rwbf"
             // Verify payment signature using Razorpay SDK
             const isPaymentVerified = await validatePaymentVerification(
-                {order_id: razorpay_order_id, payment_id: razorpay_payment_id},
+                { order_id: razorpay_order_id, payment_id: razorpay_payment_id },
                 razorpay_signature,
                 key_secret
             )
-         
+
 
             if (isPaymentVerified) {
                 return { success: true };
@@ -373,6 +373,106 @@ export class PaymentGatewayService {
             throw new HttpException('Failed to create SubSeva', HttpStatus.INTERNAL_SERVER_ERROR);
         }
     }
+
+    // async generatePaymentLink(body: any) {
+    //     try {
+    //         const dbContext = await DbContext.getContextByConfig();
+
+    //         // Instantiate Razorpay with API keys
+    //         const api_key = {
+    //             "key_id": "rzp_test_Os0xGiUl4xP5xB",
+    //             "key_secret": "Tm1FIpc8oEzosTrmkx23Rwbf"
+    //           }
+
+    //         if (!api_key.key_id || !api_key.key_secret) {
+    //             throw new HttpException('Razorpay API keys are missing', HttpStatus.INTERNAL_SERVER_ERROR);
+    //         }
+
+    //         var instance = new Razorpay(api_key);
+
+    //         const paymentLink = await instance.paymentLink.create({
+    //             amount: 1000 * 100, // Amount in paise
+    //             currency: 'INR'
+    //           });
+
+    //           return paymentLink;
+    //     } catch (error) {
+    //         console.error('Error in createOrderInit:', error);
+    //         throw new HttpException('Internal Error', HttpStatus.INTERNAL_SERVER_ERROR);
+    //     }
+    // }
+
+    async generatePaymentLink(body: any) {
+        try {
+            const dbContext = await DbContext.getContextByConfig();
+
+            // Instantiate Razorpay with API keys
+            const api_key = {
+                key_id: "rzp_live_3bauQc5WluPaOO",
+                key_secret: "X310sX1nRP4dnv7fvdHTNdid"
+            };
+
+            if (!api_key.key_id || !api_key.key_secret) {
+                throw new HttpException('Razorpay API keys are missing', HttpStatus.INTERNAL_SERVER_ERROR);
+            }
+
+            var instance = new Razorpay(api_key);
+
+            // Create the payment link with UPI enabled
+            const paymentLink = await instance.paymentLink.create({
+                amount: 1000 * 100, // Amount in paise
+                currency: 'INR',
+                description: 'Payment for order', // Add a description for the payment
+                // customer: {
+                //     contact: 81970, // Customer contact details (optional)
+                //     email: body.email      // Customer email (optional)
+                // },
+                // Enable UPI payments by adding the UPI option in the payment link
+                upi_link: true,
+                notify: {
+                    sms: true, // Enable SMS notification
+                    email: true // Enable email notification
+                }
+            });
+
+            // Return the payment link URL (short_url)
+            return paymentLink
+        } catch (error) {
+            console.error('Error in createOrderInit:', error);
+            throw new HttpException('Internal Error', HttpStatus.INTERNAL_SERVER_ERROR);
+        }
+    }
+
+    async handleWebhook(payload: any, signature: string) {
+        try {
+            let secret = "X310sX1nRP4dnv7fvdHTNdid"
+            const expectedSignature = crypto
+                .createHmac('sha256', secret)
+                .update(JSON.stringify(payload))
+                .digest('hex');
+
+            // Compare the expected signature with the received signature
+            if (signature !== expectedSignature) {
+                throw new HttpException('Invalid signature', HttpStatus.BAD_REQUEST);
+            }
+
+            // Process the verified payload
+            const payment = payload.data.object;
+            const paymentId = payment.id;
+            const orderId = payment.order_id;
+            const status = payment.status;
+
+            // Handle the payment update (e.g., update order status in your database)
+            console.log(`Payment ID: ${paymentId}`);
+            console.log(`Order ID: ${orderId}`);
+            console.log(`Status: ${status}`);
+            return true
+        } catch (error) {
+            console.error('Error in createOrderInit:', error);
+            throw new HttpException('Internal Error', HttpStatus.INTERNAL_SERVER_ERROR);
+        }
+    }
+
 
 
 

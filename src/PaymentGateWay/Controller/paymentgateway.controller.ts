@@ -1,4 +1,4 @@
-import { Controller, Post, Body, Param, Get, Query, HttpException, HttpStatus } from "@nestjs/common";
+import { Controller, Post, Body, Param, Get, Query, HttpException, HttpStatus, Req, Res } from "@nestjs/common";
 import { PaymentGatewayService } from "../Services/PaymentGateWayService";
 import { IPaymentGateway } from "../model/collections/PaymentGateway";
 
@@ -6,10 +6,16 @@ import { IPaymentGateway } from "../model/collections/PaymentGateway";
 @Controller('payment-gateway')
 export class PaymentGatewayController {
 
-    @Post("/create/orderitem")
-    async createOrderInit(@Body() body: any) {
-        const result = await PaymentGatewayService.Instance.createOrderInit(body);
-        return { data: result };
+    // @Post("/create/orderitem")
+    // async createOrderInit(@Body() body: any) {
+    //     const result = await PaymentGatewayService.Instance.createOrderInit(body);
+    //     return { data: result };
+    // }
+
+    @Post("/generatePaymentLink")
+    async generatePaymentLink(@Body() body: any) {
+        const result = await PaymentGatewayService.Instance.generatePaymentLink(body);
+        return result;
     }
 
     @Get("/key")
@@ -51,7 +57,23 @@ export class PaymentGatewayController {
     @Post("/updateBhadhraChalam")
     async createNewSeva(@Body() body: any) {
         const result = await PaymentGatewayService.Instance.updateBhadhraChalam(body);
-        return  result ;
+        return result;
+    }
+
+    @Post('razorpay')
+    async handleRazorpayWebhook(@Req() req, @Res() res,) {
+        // Get the raw body payload
+        console.log("Body", req.body)
+        console.log("headers", req.headers)
+        const payload = req.body;
+        const signature = req.headers['x-razorpay-signature'] as string;
+
+
+        // Call the service method to handle the webhook logic
+        const result = await PaymentGatewayService.Instance.handleWebhook(payload, signature);
+
+        // Send a response back to Razorpay
+        return result;
     }
 }
 
