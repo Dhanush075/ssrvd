@@ -423,10 +423,10 @@ export class PaymentGatewayService {
                 amount: 1000 * 100, // Amount in paise
                 currency: 'INR',
                 description: 'Payment for order', // Add a description for the payment
-                // customer: {
-                //     contact: 81970, // Customer contact details (optional)
-                //     email: body.email      // Customer email (optional)
-                // },
+                customer: {
+                    contact: 8197069628, // Customer contact details (optional)
+                    email: "dhanushnm07@gmail.com"      // Customer email (optional)
+                },
                 // Enable UPI payments by adding the UPI option in the payment link
                 upi_link: true,
                 notify: {
