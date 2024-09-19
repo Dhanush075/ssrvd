@@ -54,6 +54,12 @@ export class PaymentGatewayController {
         return { data: result };
     }
 
+    @Get("generateUPIQRCode")
+    async generateUPIQRCode() {
+        const result = await PaymentGatewayService.Instance.generateUPIQRCode();
+        return { data: result };
+    }
+
     @Post("/updateBhadhraChalam")
     async createNewSeva(@Body() body: any) {
         const result = await PaymentGatewayService.Instance.updateBhadhraChalam(body);

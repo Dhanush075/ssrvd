@@ -1,7 +1,10 @@
 import { DbContext } from "../../../database/DBContext";
 import { HttpException, HttpStatus, Req, Res } from '@nestjs/common';
 import { IPaymentGateway } from "../model/collections/PaymentGateway";
-import axios from "axios";
+import axios, { AxiosRequestConfig } from "axios";
+import * as QRCode from 'qrcode';
+import * as moment from 'moment-timezone'; // Correct import statement
+
 import { validatePaymentVerification } from "razorpay/dist/utils/razorpay-utils";
 
 const Razorpay = require('razorpay');
@@ -402,6 +405,48 @@ export class PaymentGatewayService {
     //     }
     // }
 
+    // async generatePaymentLink(body: any) {
+    //     try {
+    //         const dbContext = await DbContext.getContextByConfig();
+
+    //         // Instantiate Razorpay with API keys
+    //         const api_key = {
+    //             key_id: "rzp_live_3bauQc5WluPaOO",
+    //             key_secret: "X310sX1nRP4dnv7fvdHTNdid"
+    //         };
+
+    //         if (!api_key.key_id || !api_key.key_secret) {
+    //             throw new HttpException('Razorpay API keys are missing', HttpStatus.INTERNAL_SERVER_ERROR);
+    //         }
+
+    //         var instance = new Razorpay(api_key);
+
+    //         // Create the payment link with UPI enabled
+    //         const paymentLink = await instance.paymentLink.create({
+    //             amount: 1000 * 100, // Amount in paise
+    //             currency: 'INR',
+    //             description: 'Payment for order', // Add a description for the payment
+    //             customer: {
+    //                 contact: "8197069628", // Customer contact details (optional)
+    //                 email: "dhanushnm07@gmail.com"      // Customer email (optional)
+    //             },
+    //             // Enable UPI payments by adding the UPI option in the payment link
+    //             upi_link: true,
+    //             notify: {
+    //                 sms: true, // Enable SMS notification
+    //                 email: true // Enable email notification
+    //             }
+    //         });
+    //         const qrCode = await instance.paymentLink.qrCode(paymentLink.id);
+    //         return qrCode;
+    //         // Return the payment link URL (short_url)
+    //         // return paymentLink
+    //     } catch (error) {
+    //         console.error('Error in createOrderInit:', error);
+    //         throw new HttpException('Internal Error', HttpStatus.INTERNAL_SERVER_ERROR);
+    //     }
+    // }
+
     async generatePaymentLink(body: any) {
         try {
             const dbContext = await DbContext.getContextByConfig();
@@ -418,25 +463,28 @@ export class PaymentGatewayService {
 
             var instance = new Razorpay(api_key);
 
-            // Create the payment link with UPI enabled
+            // Create the payment link
             const paymentLink = await instance.paymentLink.create({
                 amount: 1000 * 100, // Amount in paise
                 currency: 'INR',
                 description: 'Payment for order', // Add a description for the payment
                 customer: {
-                    contact: 8197069628, // Customer contact details (optional)
-                    email: "dhanushnm07@gmail.com"      // Customer email (optional)
+                    contact: '8197069628', // Customer contact must be a string (10-digit mobile number)
+                    email: 'dhanushnm07@gmail.com' // Customer email (optional)
                 },
-                // Enable UPI payments by adding the UPI option in the payment link
-                upi_link: true,
+                // Notify customer via SMS and Email
                 notify: {
                     sms: true, // Enable SMS notification
                     email: true // Enable email notification
                 }
             });
 
-            // Return the payment link URL (short_url)
-            return paymentLink
+            // Generate the QR code using the short URL from paymentLink
+            const qrCode = await QRCode.toDataURL(paymentLink.short_url);
+
+            // Return the QR code and payment link details
+            return { qrCode, paymentLink };
+
         } catch (error) {
             console.error('Error in createOrderInit:', error);
             throw new HttpException('Internal Error', HttpStatus.INTERNAL_SERVER_ERROR);
@@ -472,6 +520,100 @@ export class PaymentGatewayService {
             throw new HttpException('Internal Error', HttpStatus.INTERNAL_SERVER_ERROR);
         }
     }
+
+
+    // async generateUPIQRCode(): Promise<any> {
+    //     try {
+    //       const url = 'https://api.razorpay.com/v1/payments/qr_codes';
+
+    //       // Calculate the `close_by` timestamp as 2 minutes after the current time
+    //       const currentTime = Math.floor(Date.now() / 1000); // Current Unix timestamp in seconds
+    //       const closeBy = currentTime + 2 * 60; // Add 2 minutes (120 seconds)
+
+    //       const data = {
+    //         type: 'upi_qr',
+    //         name: 'Store_1',
+    //         usage: 'single_use',
+    //         fixed_amount: true,
+    //         payment_amount: 300, // Amount in paise
+    //         description: 'For Store 1',
+    //         close_by: closeBy, // Set the close_by timestamp to 2 minutes ahead
+    //         notes: {
+    //           purpose: 'Test UPI QR Code notes',
+    //         },
+    //       };
+
+    //       const config: AxiosRequestConfig = {
+    //         auth: {
+    //           username: "rzp_live_3bauQc5WluPaOO", // Razorpay key_id
+    //           password: "X310sX1nRP4dnv7fvdHTNdid", // Razorpay key_secret
+    //         },
+    //         headers: {
+    //           'Content-Type': 'application/json',
+    //         },
+    //       };
+
+    //       // Send the request to Razorpay to create the UPI QR code
+    //       const response = await axios.post(url, data, config);
+    //       return response.data; // Return the response data (QR code details)
+    //     } catch (error) {
+    //       console.error('Error in generating UPI QR code:', error.response?.data || error.message);
+    //       throw new HttpException(
+    //         error.response?.data || 'Failed to generate UPI QR code',
+    //         HttpStatus.INTERNAL_SERVER_ERROR,
+    //       );
+    //     }
+    //   }
+
+
+    async generateUPIQRCode(): Promise<any> {
+        try {
+          const url = 'https://api.razorpay.com/v1/payments/qr_codes';
+    
+          // Get the current time in Unix timestamp format
+          const currentTimeUnix = moment().unix();
+    
+          // Set close_by to 15 minutes (900 seconds) from the current time
+          const closeByTimestamp = currentTimeUnix + 15 * 60;
+    
+          const data = {
+            type: 'upi_qr',
+            name: 'Store_1',
+            usage: 'single_use',
+            fixed_amount: true,
+            payment_amount: 300, // Amount in paise
+            description: 'For Store 1',
+            close_by: closeByTimestamp, // Set close_by to the computed timestamp
+            notes: {
+              purpose: 'Test UPI QR Code notes',
+            },
+          };
+          console.log("closeByTimestamp",closeByTimestamp)
+    
+          const config: AxiosRequestConfig = {
+            auth: {
+              username: "rzp_live_3bauQc5WluPaOO", // Razorpay key_id
+              password: "X310sX1nRP4dnv7fvdHTNdid", // Razorpay key_secret
+            },
+            headers: {
+              'Content-Type': 'application/json',
+            },
+          };
+    
+          // Send request to Razorpay to generate UPI QR code
+          const response = await axios.post(url, data, config);
+          console.log("response", response);
+          return response.data; // Return the response data (QR code details)
+        } catch (error) {
+          // Log and throw the error if any occurs
+          console.error('Error in generating UPI QR code:', error.response?.data || error.message);
+          throw new HttpException(
+            error.response || 'Failed to generate UPI QR code',
+            HttpStatus.INTERNAL_SERVER_ERROR,
+          );
+        }
+      }
+
 
 
 
