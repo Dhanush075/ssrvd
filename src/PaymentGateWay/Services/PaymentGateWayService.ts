@@ -498,22 +498,23 @@ export class PaymentGatewayService {
                 .createHmac('sha256', secret)
                 .update(JSON.stringify(payload))
                 .digest('hex');
-
+            console.log("expectedSignature",expectedSignature)
+            console.log("signature",signature)
             // Compare the expected signature with the received signature
             if (signature !== expectedSignature) {
                 throw new HttpException('Invalid signature', HttpStatus.BAD_REQUEST);
             }
 
-            // Process the verified payload
-            const payment = payload.data.object;
-            const paymentId = payment.id;
-            const orderId = payment.order_id;
-            const status = payment.status;
+            // // Process the verified payload
+            // const payment = payload.data.object;
+            // const paymentId = payment.id;
+            // const orderId = payment.order_id;
+            // const status = payment.status;
 
-            // Handle the payment update (e.g., update order status in your database)
-            console.log(`Payment ID: ${paymentId}`);
-            console.log(`Order ID: ${orderId}`);
-            console.log(`Status: ${status}`);
+            // // Handle the payment update (e.g., update order status in your database)
+            // console.log(`Payment ID: ${paymentId}`);
+            // console.log(`Order ID: ${orderId}`);
+            // console.log(`Status: ${status}`);
             return true
         } catch (error) {
             console.error('Error in createOrderInit:', error);
