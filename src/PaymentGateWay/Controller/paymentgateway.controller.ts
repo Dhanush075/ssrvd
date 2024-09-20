@@ -14,6 +14,7 @@ export class PaymentGatewayController {
 
     @Post("/generatePaymentLink")
     async generatePaymentLink(@Body() body: any) {
+        console.log("ofbody",body)
         const result = await PaymentGatewayService.Instance.generatePaymentLink(body);
         return result;
     }
