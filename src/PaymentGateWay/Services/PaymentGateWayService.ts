@@ -476,7 +476,8 @@ export class PaymentGatewayService {
                 notify: {
                     sms: true, // Enable SMS notification
                     email: true // Enable email notification
-                }
+                },
+                reference_id: body.order_id
             });
 
             // Generate the QR code using the short URL from paymentLink
@@ -507,27 +508,16 @@ export class PaymentGatewayService {
             }
             if(signature == expectedSignature){
                 console.log("payload.payload.entity",payload.payload.payment.entity)
-                // if (payload.event === "payment.captured") {
-                //     const payment = await dbContext.PaymentGateway.updateOne({ transaction_id: parsedPayload.order_id }, { $set: { status: parsedPayload.status, request_data: parsedPayload.request_data, checksum: checksum, is_verified: true } });
-                //     return true;
-                // }
-                // else {
-                //     const payment = await dbContext.PaymentGateway.updateOne({ transaction_id: parsedPayload.order_id }, { $set: { status: parsedPayload.status, request_data: parsedPayload.request_data, checksum: checksum } });
-                //     return false;
-                // }
+                if (payload.event === "payment.captured") {
+                    const payment = await dbContext.PaymentGateway.updateOne({ transaction_id: payload.payload.payment.entity.id }, { $set: { status: payload.payload.payment.entity.status, request_data: payload.payload.payment.entity, checksum: signature, is_verified: true } });
+                    return true;
+                }
+                else {
+                    const payment = await dbContext.PaymentGateway.updateOne({ transaction_id: payload.payload.payment.entity.id }, { $set: { status: payload.payload.payment.entity.status, request_data: payload.payload.payment.entity, checksum: signature, is_verified: false } });
+                    return false;
+                }
             }
-
-            // // Process the verified payload
-            // const payment = payload.data.object;
-            // const paymentId = payment.id;
-            // const orderId = payment.order_id;
-            // const status = payment.status;
-
-            // // Handle the payment update (e.g., update order status in your database)
-            // console.log(`Payment ID: ${paymentId}`);
-            // console.log(`Order ID: ${orderId}`);
-            // console.log(`Status: ${status}`);
-            return true
+            return false
         } catch (error) {
             console.error('Error in createOrderInit:', error);
             throw new HttpException('Internal Error', HttpStatus.INTERNAL_SERVER_ERROR);
