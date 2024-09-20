@@ -66,11 +66,14 @@ export class PaymentGatewayController {
         return result;
     }
 
+    @Post("/getTransactionId")
+    async getTransactionIdByOrderId(@Body() body: any) {
+        const result = await PaymentGatewayService.Instance.getTransactionIdByOrderId(body);
+        return result;
+    }
+
     @Post('razorpay')
     async handleRazorpayWebhook(@Req() req, @Res() res,) {
-        // Get the raw body payload
-        console.log("Body", req.body)
-        console.log("headers", req.headers)
         const payload = req.body;
         const signature = req.headers['x-razorpay-signature'] as string;
 

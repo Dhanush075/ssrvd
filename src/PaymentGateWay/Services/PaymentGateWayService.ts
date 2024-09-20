@@ -478,7 +478,7 @@ export class PaymentGatewayService {
                     email: true // Enable email notification
                 },
                 notes: {
-                    order_id: "fdgdfg", // Store your custom order ID in notes
+                    order_id: body.order_id, // Store your custom order ID in notes
                 },
             });
 
@@ -502,20 +502,51 @@ export class PaymentGatewayService {
                 .createHmac('sha256', secret)
                 .update(JSON.stringify(payload))
                 .digest('hex');
-            console.log("expectedSignature",expectedSignature)
-            console.log("signature",signature)
+            console.log("expectedSignature", expectedSignature)
+            console.log("signature", signature)
             // Compare the expected signature with the received signature
             if (signature !== expectedSignature) {
                 throw new HttpException('Invalid signature', HttpStatus.BAD_REQUEST);
             }
-            if(signature == expectedSignature){
-                console.log("payload.payload.payment.entity.notes",payload.payload.payment.entity.notes)
+            if (signature == expectedSignature) {
+                console.log("payload.payload.payment.entity.notes", payload.payload.payment.entity.notes)
                 if (payload.event === "payment.captured") {
-                    const payment = await dbContext.PaymentGateway.updateOne({ transaction_id: payload.payload.payment.entity.id }, { $set: { status: payload.payload.payment.entity.status, request_data: payload.payload.payment.entity, checksum: signature, is_verified: true } });
+                    // const payment = await dbContext.PaymentGateway.updateOne({ transaction_id: payload.payload.payment.entity.id }, { $set: { status: payload.payload.payment.entity.status, request_data: payload.payload.payment.entity, checksum: signature, is_verified: true } });
+                    const newOrder = new dbContext.PaymentGateway();
+                    newOrder.transaction_id = payload.payload.payment.entity.id;
+                    newOrder.order_id = payload.payload.payment.entity.notes.order_id;
+                    newOrder.status = payload.payload.payment.entity.status;
+                    newOrder.request_data = payload.payload.payment.entity;
+                    newOrder.checksum = signature;
+                    newOrder.is_verified = true;
+                    await newOrder.save();
+                    const orderId = await dbContext.UserReciept.updateOne({ order_id: payload.payload.payment.entity.notes.order_id }, { $set: { transaction_id: payload.payload.payment.entity.id } })
+                    const body = {
+                        updateBookingStatus: true,
+                        order_id: payload.payload.payment.entity.notes.order_id,
+                        transaction_no: payload.payload.payment.entity.id,
+                        status: 'success'
+                    }
+                    await this.updateBhadhraChalam(body);
                     return true;
                 }
                 else {
-                    const payment = await dbContext.PaymentGateway.updateOne({ transaction_id: payload.payload.payment.entity.id }, { $set: { status: payload.payload.payment.entity.status, request_data: payload.payload.payment.entity, checksum: signature, is_verified: false } });
+                    const newOrder = new dbContext.PaymentGateway();
+                    newOrder.transaction_id = payload.payload.payment.entity.id;
+                    newOrder.order_id = payload.payload.payment.entity.notes.order_id;
+                    newOrder.status = payload.payload.payment.entity.status;
+                    newOrder.request_data = payload.payload.payment.entity;
+                    newOrder.checksum = signature;
+                    newOrder.is_verified = false;
+                    await newOrder.save();
+                    const orderId = await dbContext.UserReciept.updateOne({ order_id: payload.payload.payment.entity.notes.order_id }, { $set: { transaction_id: payload.payload.payment.entity.id } })
+                    const body = {
+                        updateBookingStatus: true,
+                        order_id: payload.payload.payment.entity.notes.order_id,
+                        transaction_no: payload.payload.payment.entity.id,
+                        status: 'fail'
+                    }
+                    await this.updateBhadhraChalam(body);
                     return false;
                 }
             }
@@ -573,49 +604,69 @@ export class PaymentGatewayService {
 
     async generateUPIQRCode(): Promise<any> {
         try {
-          const url = 'https://api.razorpay.com/v1/payments/qr_codes';
-    
-          // Get the current time in Unix timestamp format
-          const currentTimeUnix = moment().unix();
-    
-          // Set close_by to 15 minutes (900 seconds) from the current time
-          const closeByTimestamp = currentTimeUnix + 15 * 60;
-    
-          const data = {
-            type: 'upi_qr',
-            name: 'Store_1',
-            usage: 'single_use',
-            fixed_amount: true,
-            payment_amount: 300, // Amount in paise
-            description: 'For Store 1',
-            close_by: closeByTimestamp, // Set close_by to the computed timestamp
-            notes: {
-              purpose: 'Test UPI QR Code notes',
-            },
-          };
-          console.log("closeByTimestamp",closeByTimestamp)
-    
-          const config: AxiosRequestConfig = {
-            auth: {
-              username: "rzp_live_3bauQc5WluPaOO", // Razorpay key_id
-              password: "X310sX1nRP4dnv7fvdHTNdid", // Razorpay key_secret
-            },
-            headers: {
-              'Content-Type': 'application/json',
-            },
-          };
-    
-          // Send request to Razorpay to generate UPI QR code
-          const response = await axios.post(url, data, config);
-          console.log("response", response);
-          return response.data; // Return the response data (QR code details)
+            const url = 'https://api.razorpay.com/v1/payments/qr_codes';
+
+            // Get the current time in Unix timestamp format
+            const currentTimeUnix = moment().unix();
+
+            // Set close_by to 15 minutes (900 seconds) from the current time
+            const closeByTimestamp = currentTimeUnix + 15 * 60;
+
+            const data = {
+                type: 'upi_qr',
+                name: 'Store_1',
+                usage: 'single_use',
+                fixed_amount: true,
+                payment_amount: 300, // Amount in paise
+                description: 'For Store 1',
+                close_by: closeByTimestamp, // Set close_by to the computed timestamp
+                notes: {
+                    purpose: 'Test UPI QR Code notes',
+                },
+            };
+            console.log("closeByTimestamp", closeByTimestamp)
+
+            const config: AxiosRequestConfig = {
+                auth: {
+                    username: "rzp_live_3bauQc5WluPaOO", // Razorpay key_id
+                    password: "X310sX1nRP4dnv7fvdHTNdid", // Razorpay key_secret
+                },
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+            };
+
+            // Send request to Razorpay to generate UPI QR code
+            const response = await axios.post(url, data, config);
+            console.log("response", response);
+            return response.data; // Return the response data (QR code details)
         } catch (error) {
-          // Log and throw the error if any occurs
-          console.error('Error in generating UPI QR code:', error.response?.data || error.message);
-          throw new HttpException(
-            error.response || 'Failed to generate UPI QR code',
-            HttpStatus.INTERNAL_SERVER_ERROR,
-          );
+            // Log and throw the error if any occurs
+            console.error('Error in generating UPI QR code:', error.response?.data || error.message);
+            throw new HttpException(
+                error.response || 'Failed to generate UPI QR code',
+                HttpStatus.INTERNAL_SERVER_ERROR,
+            );
+        }
+    }
+
+    async getTransactionIdByOrderId(body: any) {
+        try {
+          const dbContext = await DbContext.getContextByConfig();
+          const searchValue = body.mobile_number;
+      
+          // Prepare the query condition
+          const savedRegistrations = await dbContext.PaymentGateway.findOne({ order_id: body.order_id })
+      
+          if (!savedRegistrations) {
+            throw new HttpException('No transaction id found', HttpStatus.NOT_FOUND);
+          }
+          return savedRegistrations.transaction_id;
+        } catch (error) {
+          if (error instanceof HttpException) {
+            throw error;
+          }
+          throw new HttpException('Error retrieving registrations by search value', HttpStatus.INTERNAL_SERVER_ERROR);
         }
       }
 
