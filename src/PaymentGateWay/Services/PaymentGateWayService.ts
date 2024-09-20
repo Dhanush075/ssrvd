@@ -449,7 +449,7 @@ export class PaymentGatewayService {
     async generatePaymentLink(body: any) {
         try {
             const dbContext = await DbContext.getContextByConfig();
-
+            console.log("body",body)
             // Instantiate Razorpay with API keys
             const api_key = {
                 key_id: "rzp_live_3bauQc5WluPaOO",
