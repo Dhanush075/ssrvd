@@ -477,7 +477,9 @@ export class PaymentGatewayService {
                     sms: true, // Enable SMS notification
                     email: true // Enable email notification
                 },
-                reference_id: body.order_id
+                notes: {
+                    order_id: "fdgdfg", // Store your custom order ID in notes
+                },
             });
 
             // Generate the QR code using the short URL from paymentLink
@@ -507,7 +509,7 @@ export class PaymentGatewayService {
                 throw new HttpException('Invalid signature', HttpStatus.BAD_REQUEST);
             }
             if(signature == expectedSignature){
-                console.log("payload.payload.entity",payload.payload.payment.entity)
+                console.log("payload.payload.payment.entity.notes",payload.payload.payment.entity.notes)
                 if (payload.event === "payment.captured") {
                     const payment = await dbContext.PaymentGateway.updateOne({ transaction_id: payload.payload.payment.entity.id }, { $set: { status: payload.payload.payment.entity.status, request_data: payload.payload.payment.entity, checksum: signature, is_verified: true } });
                     return true;
