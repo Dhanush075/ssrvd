@@ -465,7 +465,7 @@ export class PaymentGatewayService {
 
             // Create the payment link
             const paymentLink = await instance.paymentLink.create({
-                amount: 1000 * 100, // Amount in paise
+                amount: 1 * 100, // Amount in paise
                 currency: 'INR',
                 description: 'Payment for order', // Add a description for the payment
                 customer: {
