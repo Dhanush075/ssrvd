@@ -493,6 +493,7 @@ export class PaymentGatewayService {
 
     async handleWebhook(payload: any, signature: string) {
         try {
+            const dbContext = await DbContext.getContextByConfig();
             let secret = "X310sX1nRP4dnv7fvdHTNdid"
             const expectedSignature = crypto
                 .createHmac('sha256', secret)
@@ -503,6 +504,17 @@ export class PaymentGatewayService {
             // Compare the expected signature with the received signature
             if (signature !== expectedSignature) {
                 throw new HttpException('Invalid signature', HttpStatus.BAD_REQUEST);
+            }
+            if(signature == expectedSignature){
+                console.log("payload.payload.entity",payload.payload.payment.entity)
+                // if (payload.event === "payment.captured") {
+                //     const payment = await dbContext.PaymentGateway.updateOne({ transaction_id: parsedPayload.order_id }, { $set: { status: parsedPayload.status, request_data: parsedPayload.request_data, checksum: checksum, is_verified: true } });
+                //     return true;
+                // }
+                // else {
+                //     const payment = await dbContext.PaymentGateway.updateOne({ transaction_id: parsedPayload.order_id }, { $set: { status: parsedPayload.status, request_data: parsedPayload.request_data, checksum: checksum } });
+                //     return false;
+                // }
             }
 
             // // Process the verified payload
