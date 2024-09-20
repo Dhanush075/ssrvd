@@ -332,25 +332,24 @@ export class PaymentGatewayService {
     }
 
 
-    async getPaymentStatusByTransactionId(transaction_id: string) {
+    async getPaymentStatusByTransactionId(order_id: string) {
         try {
             const dbContext = await DbContext.getContextByConfig();
-            let status = await dbContext.PaymentGateway.findOne({ transaction_id: transaction_id });
+            let status = await dbContext.PaymentGateway.findOne({ order_id: order_id });
             if (status) {
                 if (status.is_verified) {
-                    return true;
+                    return { success: true, transaction_id: status.transaction_id };
+                } else {
+                    return { success: false };
                 }
-                else {
-                    return false
-                }
-            }
-            else {
-                return false
+            } else {
+                return { success: false };
             }
         } catch (error) {
-            throw new HttpException('Failed to Verfiy Payment', HttpStatus.INTERNAL_SERVER_ERROR);
+            throw new HttpException('Failed to Verify Payment', HttpStatus.INTERNAL_SERVER_ERROR);
         }
     }
+    
 
 
     async updateBhadhraChalam(body: any) {
