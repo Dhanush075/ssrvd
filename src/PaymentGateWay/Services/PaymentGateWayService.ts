@@ -487,7 +487,7 @@ export class PaymentGatewayService {
             // });
 
             const paymentLink = await instance.orders.create({
-                amount: 5000,  // Amount in paise (5000 paise = ₹50.00)
+                amount: 100,  // Amount in paise (5000 paise = ₹50.00)
                 currency: "INR",
                 receipt: "order_rcptid_11",
                 payment_capture: 1  // Auto-capture payment
