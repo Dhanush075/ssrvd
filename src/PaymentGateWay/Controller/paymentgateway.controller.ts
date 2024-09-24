@@ -74,16 +74,27 @@ export class PaymentGatewayController {
     }
 
     @Post('razorpay')
-    async handleRazorpayWebhook(@Req() req, @Res() res,) {
+    async handleRazorpayWebhook(@Req() req, @Res() res) {
         const payload = req.body;
         const signature = req.headers['x-razorpay-signature'] as string;
-
-
-        // Call the service method to handle the webhook logic
-        const result = await PaymentGatewayService.Instance.handleWebhook(payload, signature);
-
-        // Send a response back to Razorpay
-        return result;
+    
+        try {
+            // Call the service method to handle the webhook logic
+            const result = await PaymentGatewayService.Instance.handleWebhook(payload, signature);
+    
+            // If the result is true (success), send a 200 OK response to stop Razorpay retries
+            if (result) {
+                return res.status(200).send('Webhook processed successfully');
+            } else {
+                // Return a 200 OK even for failure cases (but you can log the error)
+                return res.status(200).send('Webhook processed with a failure status');
+            }
+        } catch (error) {
+            console.error('Error processing Razorpay webhook:', error);
+            // Always send a 200 OK to prevent retries even if there is an internal server error
+            return res.status(200).send('Webhook encountered an error but acknowledged');
+        }
     }
+    
 }
 
