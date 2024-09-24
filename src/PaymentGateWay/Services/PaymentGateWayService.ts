@@ -349,7 +349,7 @@ export class PaymentGatewayService {
             throw new HttpException('Failed to Verify Payment', HttpStatus.INTERNAL_SERVER_ERROR);
         }
     }
-
+    
 
 
     async updateBhadhraChalam(body: any) {
@@ -449,7 +449,7 @@ export class PaymentGatewayService {
     async generatePaymentLink(body: any) {
         try {
             const dbContext = await DbContext.getContextByConfig();
-            console.log("body", body)
+            console.log("body",body)
             // Instantiate Razorpay with API keys
             const api_key = {
                 key_id: "rzp_live_3bauQc5WluPaOO",
@@ -463,48 +463,29 @@ export class PaymentGatewayService {
             var instance = new Razorpay(api_key);
 
             // Create the payment link
-            // const paymentLink = await instance.paymentLink.create({
-            //     amount: 1 * 100, // Amount in paise
-            //     currency: 'INR',
-            //     description: 'Payment for order', // Add a description for the payment
-            //     customer: {
-            //         contact: '8197069628', // Customer contact must be a string (10-digit mobile number)
-            //         email: 'dhanushnm07@gmail.com' // Customer email (optional)
-            //     },
-            //     // Notify customer via SMS and Email
-            //     notify: {
-            //         sms: true, // Enable SMS notification
-            //         email: true // Enable email notification
-            //     },
-            //     notes: {
-            //         order_id: body.order_id, // Store your custom order ID in notes
-            //     },
-            //     method: 'upi',
-            //     upi: {
-            //       qr: true,
-            //       timeout: 10
-            //     }
-            // });
-
-            const paymentLink = await instance.orders.create({
-                amount: 100,  // Amount in paise (5000 paise = ₹50.00)
-                currency: "INR",
-                receipt: "order_rcptid_11",
-                payment_capture: 1  // Auto-capture payment
+            const paymentLink = await instance.paymentLink.create({
+                amount: 1 * 100, // Amount in paise
+                currency: 'INR',
+                description: 'Payment for order', // Add a description for the payment
+                customer: {
+                    contact: '8197069628', // Customer contact must be a string (10-digit mobile number)
+                    email: 'dhanushnm07@gmail.com' // Customer email (optional)
+                },
+                // Notify customer via SMS and Email
+                notify: {
+                    sms: true, // Enable SMS notification
+                    email: true // Enable email notification
+                },
+                notes: {
+                    order_id: body.order_id, // Store your custom order ID in notes
+                },
             });
 
-            const merchantUPI = 'merchant@upi'; // Replace with your UPI ID
-            const merchantName = 'MerchantName'; // Replace with your merchant name
-
-            // Construct UPI Intent URL
-            const upiIntentURL = `upi://pay?pa=${merchantUPI}&pn=${merchantName}&tr=${paymentLink.id}&am=${paymentLink.amount / 100}&cu=${paymentLink.currency}`;
-            console.log('UPI Intent URL:', upiIntentURL);
-
             // Generate the QR code using the short URL from paymentLink
-            // const qrCode = await QRCode.toDataURL(paymentLink.short_url);
+            const qrCode = await QRCode.toDataURL(paymentLink.short_url);
 
             // Return the QR code and payment link details
-            return { upiIntentURL };
+            return { qrCode, paymentLink };
 
         } catch (error) {
             console.error('Error in createOrderInit:', error);
@@ -670,23 +651,23 @@ export class PaymentGatewayService {
 
     async getTransactionIdByOrderId(body: any) {
         try {
-            const dbContext = await DbContext.getContextByConfig();
-            const searchValue = body.mobile_number;
-
-            // Prepare the query condition
-            const savedRegistrations = await dbContext.PaymentGateway.findOne({ order_id: body.order_id })
-
-            if (!savedRegistrations) {
-                throw new HttpException('No transaction id found', HttpStatus.NOT_FOUND);
-            }
-            return savedRegistrations.transaction_id;
+          const dbContext = await DbContext.getContextByConfig();
+          const searchValue = body.mobile_number;
+      
+          // Prepare the query condition
+          const savedRegistrations = await dbContext.PaymentGateway.findOne({ order_id: body.order_id })
+      
+          if (!savedRegistrations) {
+            throw new HttpException('No transaction id found', HttpStatus.NOT_FOUND);
+          }
+          return savedRegistrations.transaction_id;
         } catch (error) {
-            if (error instanceof HttpException) {
-                throw error;
-            }
-            throw new HttpException('Error retrieving registrations by search value', HttpStatus.INTERNAL_SERVER_ERROR);
+          if (error instanceof HttpException) {
+            throw error;
+          }
+          throw new HttpException('Error retrieving registrations by search value', HttpStatus.INTERNAL_SERVER_ERROR);
         }
-    }
+      }
 
 
 
