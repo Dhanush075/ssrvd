@@ -14,6 +14,20 @@ export class UserRecieptController {
         return  result ;
     }
 
+    @Post('/getTotalCount')
+    async getRecieptCountDateWise(@Body() body: any) {
+  
+      const result = await UserRecieptService.Instance.getRecieptCountDateWise(body);
+      return { success: true, data: result };
+  
+    }
+
+    @Get("/updatePaymentStatusInReciept/:id")
+    async updatePaymentStatus(@Param("id") id: string) {
+        const result = await UserRecieptService.Instance.updatePaymentStatus(id);
+        return result;
+    }
+
     /**
      * Get UserReciept By ID
      */

@@ -57,7 +57,7 @@ export class UserRecieptService {
                 data: userReciept
 
             };
-          
+
             let reciept = await axios(axiosConfig)
             const newOrder = new dbContext.UserReciept();
             // Object.assign(newOrder, <IUserReciept>userReciept);
@@ -107,8 +107,100 @@ export class UserRecieptService {
         }
     }
 
+    async getRecieptCountDateWise(date: any) {
+        try {
+            const dbContext = await DbContext.getContextByConfig();
+            let convertedFromDate = new Date(date.fromDate);
+            let result;
+            convertedFromDate.setHours(0, 0, 0, 0);
+            let convertedToDate = new Date(date.toDate);
+            convertedToDate.setHours(23, 59, 59, 999);
+            if (date.fromDate && date.toDate && date.service_id) {
+                result = await dbContext.UserReciept.aggregate([
+                    {
+                        $match: {
+                            "bookingdata.service_id": date.service_id,
+                            createdAt: { $gte: convertedFromDate, $lte: convertedToDate }
+                            // createdAt: date
+                        },
+                    },
+                    { $unwind: '$bookingdata' },
+                    // Match documents where the sevaId matches the one in the payload
+                    {
+                        $match: {
+                            "bookingdata.service_id": date.service_id,
+                        },
+                    },
+                    // Group by sevaId and calculate the totalAmount and totalQty
+                    {
+                        $group: {
+                            _id: '$bookingdata.service_id',
+                            totalAmount: { $sum: '$bookingdata.total' },
+                            totalQty: { $sum: '$bookingdata.quantity' },
+                        },
+                    },
 
+                ]);
+                if (result.length === 0) {
+                    return { totalAmount: 0, totalQty: 0 };
+                }
 
+                // Return the totalAmount and totalQty for the matching sevaId
+                return {
+                    totalAmount: result[0].totalAmount,
+                    totalQty: result[0].totalQty,
+                };
+
+            }
+            else if(!date.service_id){
+                result = await dbContext.UserReciept.aggregate([
+                    {
+                        $match: {
+                            createdAt: { $gte: convertedFromDate, $lte: convertedToDate }
+                        },
+                    },
+                    
+
+                ]);
+                if (result.length === 0) {
+                    return { totalAmount: 0, totalQty: 0 };
+                }
+
+                // Return the totalAmount and totalQty for the matching sevaId
+                return {
+                    totalAmount: result[0].totalAmount,
+                    totalQty: result[0].totalQty,
+                };
+
+            }
+            else {
+                throw new HttpException('Empty Payload', HttpStatus.NOT_FOUND);
+            }
+
+        } catch (error) {
+            if (error instanceof HttpException) {
+                throw error;
+            }
+            throw new HttpException('Error retrieving registrations by Patient ID', HttpStatus.INTERNAL_SERVER_ERROR);
+        }
+
+    }
+
+    async updatePaymentStatus(id: string) {
+        try {
+            const dbContext = await DbContext.getContextByConfig();
+            const updatedUser = await dbContext.UserReciept.updateOne({ order_id: id }, { $set: { isPaid: true } });
+            if (!updatedUser) {
+                throw new HttpException('Reciept Not found', HttpStatus.NOT_FOUND);
+            }
+            return true;
+        } catch (error) {
+            if (error instanceof HttpException) {
+                throw error;
+            }
+            throw new HttpException('Error updating user profile', HttpStatus.INTERNAL_SERVER_ERROR);
+        }
+    }
 
 
 

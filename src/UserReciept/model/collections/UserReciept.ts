@@ -15,6 +15,7 @@ export interface IUserReciept extends mongoose.Document {
     transaction_id: string;
     is_verified: boolean;
     mobileNumber: number;
+    isPaid: boolean;
 
 
     __ref: string;
@@ -34,6 +35,7 @@ export var IUserRecieptSchema = new mongoose.Schema({
     transaction_id: { type: String },
     is_verified: { type: Boolean },
     mobileNumber: { type: Number },
+    isPaid: { type: Boolean },
 
     // db defaults
     _id: { type: String, default: RandomNumberGenerator.getUniqueId },
