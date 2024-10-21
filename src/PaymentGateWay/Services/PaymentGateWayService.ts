@@ -349,7 +349,7 @@ export class PaymentGatewayService {
             throw new HttpException('Failed to Verify Payment', HttpStatus.INTERNAL_SERVER_ERROR);
         }
     }
-    
+
 
 
     async updateBhadhraChalam(body: any) {
@@ -446,50 +446,125 @@ export class PaymentGatewayService {
     //     }
     // }
 
+    // async generatePaymentLink(body: any) {
+    //     try {
+    //         const dbContext = await DbContext.getContextByConfig();
+    //         console.log("body",body)
+    //         // Instantiate Razorpay with API keys
+    //         const api_key = {
+    //             key_id: "rzp_live_3bauQc5WluPaOO",
+    //             key_secret: "X310sX1nRP4dnv7fvdHTNdid"
+    //         };
+
+    //         if (!api_key.key_id || !api_key.key_secret) {
+    //             throw new HttpException('Razorpay API keys are missing', HttpStatus.INTERNAL_SERVER_ERROR);
+    //         }
+
+    //         var instance = new Razorpay(api_key);
+
+    //         // Create the payment link
+    //         const paymentLink = await instance.paymentLink.create({
+    //             amount: 1 * 100, // Amount in paise
+    //             currency: 'INR',
+    //             description: 'Payment for order', // Add a description for the payment
+    //             customer: {
+    //                 contact: '8197069628', // Customer contact must be a string (10-digit mobile number)
+    //                 email: 'dhanushnm07@gmail.com' // Customer email (optional)
+    //             },
+    //             // Notify customer via SMS and Email
+    //             notify: {
+    //                 sms: true, // Enable SMS notification
+    //                 email: true // Enable email notification
+    //             },
+    //             notes: {
+    //                 order_id: body.order_id, // Store your custom order ID in notes
+    //             },
+    //         });
+
+    //         // Generate the QR code using the short URL from paymentLink
+    //         const qrCode = await QRCode.toDataURL(paymentLink.short_url);
+
+    //         // Return the QR code and payment link details
+    //         return { qrCode, paymentLink };
+
+    //     } catch (error) {
+    //         console.error('Error in createOrderInit:', error);
+    //         throw new HttpException('Internal Error', HttpStatus.INTERNAL_SERVER_ERROR);
+    //     }
+    // }
+
+    // async generatePaymentLink(body: any) {
+    //     try {
+    //         // Your credentials
+    //         const username = 'rzp_live_3bauQc5WluPaOO'; // Replace with your username
+    //         const password = 'X310sX1nRP4dnv7fvdHTNdid'; // Replace with your password
+    //         // Encode credentials in base64
+    //         const cred = btoa(`${username}:${password}`);
+    //         let body = {
+    //             type: "upi_qr",
+    //             name: "Store_1",
+    //             usage: "single_use",
+    //             fixed_amount: true,
+    //             payment_amount: 100,
+    //             description: "For Store 1",
+    //             customer_id: "cust_PBeUdZgHAmNeM6",
+    //             // close_by: 1729529700,
+    //             // notes: {
+    //             //     order_id: receiptResponse.data.order_id,
+    //             // }
+    //         }
+    //         const transactionResponse = await axios.post('https://api.razorpay.com/v1/payments/qr_codes', body, {
+    //             headers: {
+    //                 'Content-Type': 'application/json',
+    //                 'Authorization': `Basic ${cred}` // Include the Basic Auth header
+    //             }
+    //         });
+
+
+    //     } catch (error) {
+    //         console.error('Error in createOrderInit:', error);
+    //         throw new HttpException('Internal Error', HttpStatus.INTERNAL_SERVER_ERROR);
+    //     }
+    // }
+
     async generatePaymentLink(body: any) {
         try {
-            const dbContext = await DbContext.getContextByConfig();
-            console.log("body",body)
-            // Instantiate Razorpay with API keys
-            const api_key = {
-                key_id: "rzp_live_3bauQc5WluPaOO",
-                key_secret: "X310sX1nRP4dnv7fvdHTNdid"
-            };
-
-            if (!api_key.key_id || !api_key.key_secret) {
-                throw new HttpException('Razorpay API keys are missing', HttpStatus.INTERNAL_SERVER_ERROR);
-            }
-
-            var instance = new Razorpay(api_key);
-
-            // Create the payment link
-            const paymentLink = await instance.paymentLink.create({
-                amount: 1 * 100, // Amount in paise
-                currency: 'INR',
-                description: 'Payment for order', // Add a description for the payment
-                customer: {
-                    contact: '8197069628', // Customer contact must be a string (10-digit mobile number)
-                    email: 'dhanushnm07@gmail.com' // Customer email (optional)
-                },
-                // Notify customer via SMS and Email
-                notify: {
-                    sms: true, // Enable SMS notification
-                    email: true // Enable email notification
-                },
+            // Your Razorpay credentials
+            const username = 'rzp_live_3bauQc5WluPaOO'; // Replace with your username
+            const password = 'X310sX1nRP4dnv7fvdHTNdid'; // Replace with your password
+    
+            // Encode credentials in base64 for Basic Auth
+            const cred = Buffer.from(`${username}:${password}`).toString('base64');
+    
+            // Define request body for creating QR code
+            const requestBody = {
+                type: "upi_qr",
+                name: "Store_1",
+                usage: "single_use",
+                fixed_amount: true,
+                payment_amount: body.amount,
+                description: "For Store 1",
+                customer_id: "cust_PBeUdZgHAmNeM6",
+                // close_by: 1729529700, // Optional
                 notes: {
-                    order_id: body.order_id, // Store your custom order ID in notes
-                },
+                    order_id: body.order_id,
+                }
+            };
+    
+            // Make the POST request to Razorpay API
+            const transactionResponse = await axios.post('https://api.razorpay.com/v1/payments/qr_codes', requestBody, {
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Authorization': `Basic ${cred}` // Include the Basic Auth header
+                }
             });
-
-            // Generate the QR code using the short URL from paymentLink
-            const qrCode = await QRCode.toDataURL(paymentLink.short_url);
-
-            // Return the QR code and payment link details
-            return { qrCode, paymentLink };
-
+    
+            // Handle the successful response
+            return transactionResponse.data;
+    
         } catch (error) {
-            console.error('Error in createOrderInit:', error);
-            throw new HttpException('Internal Error', HttpStatus.INTERNAL_SERVER_ERROR);
+            console.error('Error in generatePaymentLink:', error);
+            throw new HttpException('Internal Server Error', HttpStatus.INTERNAL_SERVER_ERROR);
         }
     }
 
@@ -652,23 +727,23 @@ export class PaymentGatewayService {
 
     async getTransactionIdByOrderId(body: any) {
         try {
-          const dbContext = await DbContext.getContextByConfig();
-          const searchValue = body.mobile_number;
-      
-          // Prepare the query condition
-          const savedRegistrations = await dbContext.PaymentGateway.findOne({ order_id: body.order_id })
-      
-          if (!savedRegistrations) {
-            throw new HttpException('No transaction id found', HttpStatus.NOT_FOUND);
-          }
-          return savedRegistrations.transaction_id;
+            const dbContext = await DbContext.getContextByConfig();
+            const searchValue = body.mobile_number;
+
+            // Prepare the query condition
+            const savedRegistrations = await dbContext.PaymentGateway.findOne({ order_id: body.order_id })
+
+            if (!savedRegistrations) {
+                throw new HttpException('No transaction id found', HttpStatus.NOT_FOUND);
+            }
+            return savedRegistrations.transaction_id;
         } catch (error) {
-          if (error instanceof HttpException) {
-            throw error;
-          }
-          throw new HttpException('Error retrieving registrations by search value', HttpStatus.INTERNAL_SERVER_ERROR);
+            if (error instanceof HttpException) {
+                throw error;
+            }
+            throw new HttpException('Error retrieving registrations by search value', HttpStatus.INTERNAL_SERVER_ERROR);
         }
-      }
+    }
 
 
 
