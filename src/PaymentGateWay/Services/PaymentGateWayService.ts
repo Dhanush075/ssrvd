@@ -510,6 +510,7 @@ export class PaymentGatewayService {
             if (signature == expectedSignature) {
                 console.log("payload.payload.payment.entity.notes", payload.payload.payment.entity.notes)
                 if (payload.event === "payment.captured") {
+                    console.log("Payment success")
                     // const payment = await dbContext.PaymentGateway.updateOne({ transaction_id: payload.payload.payment.entity.id }, { $set: { status: payload.payload.payment.entity.status, request_data: payload.payload.payment.entity, checksum: signature, is_verified: true } });
                     const newOrder = new dbContext.PaymentGateway();
                     newOrder.transaction_id = payload.payload.payment.entity.id;
