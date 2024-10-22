@@ -337,9 +337,9 @@ export class PaymentGatewayService {
             const dbContext = await DbContext.getContextByConfig();
             let status = await dbContext.PaymentGateway.findOne({ order_id: order_id });
             if (status) {
-                if (status.is_verified) {
+                if (status.is_verified && status.status === "success" ) {
                     return { success: true, transaction_id: status.transaction_id };
-                } else {
+                } else if(!status.is_verified && status.status === "fail"){
                     return { success: false, transaction_id: status.transaction_id };
                 }
             } else {
