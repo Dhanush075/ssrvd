@@ -605,7 +605,8 @@ export class PaymentGatewayService {
                     await this.updateBhadhraChalam(body);
                     return true;
                 }
-                else {
+                else if(payload.event === "payment.failed"){
+                    console.log("Failed")
                     console.log("Payment Failed",payload)
                     const newOrder = new dbContext.PaymentGateway();
                     newOrder.transaction_id = payload.payload.payment.entity.id;
