@@ -340,7 +340,7 @@ export class PaymentGatewayService {
                 if (status.is_verified) {
                     return { success: true, transaction_id: status.transaction_id };
                 } else {
-                    return { success: false };
+                    return { success: false, transaction_id: status.transaction_id };
                 }
             } else {
                 return { success: false };
