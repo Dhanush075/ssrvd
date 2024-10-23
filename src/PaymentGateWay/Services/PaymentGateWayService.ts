@@ -571,6 +571,7 @@ export class PaymentGatewayService {
     async handleWebhook(payload: any, signature: string) {
         try {
             const dbContext = await DbContext.getContextByConfig();
+            console.log("payload",payload)
             let secret = "X310sX1nRP4dnv7fvdHTNdid"
             const expectedSignature = crypto
                 .createHmac('sha256', secret)
