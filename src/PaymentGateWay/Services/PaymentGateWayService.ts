@@ -337,10 +337,10 @@ export class PaymentGatewayService {
             const dbContext = await DbContext.getContextByConfig();
             let status = await dbContext.PaymentGateway.findOne({ order_id: order_id });
             if (status) {
-                if (status.is_verified && status.status === "success" ) {
+                if (status.is_verified) {
                     return { success: true, transaction_id: status.transaction_id };
-                } else if(!status.is_verified && status.status === "fail"){
-                    return { success: false, transaction_id: status.transaction_id };
+                } else {
+                    return { success: false };
                 }
             } else {
                 return { success: false };
@@ -545,6 +545,7 @@ export class PaymentGatewayService {
                 payment_amount: body.amount,
                 description: "For Store 1",
                 customer_id: "cust_PBeUdZgHAmNeM6",
+                order_id: body.order_id,
                 // close_by: 1729529700, // Optional
                 notes: {
                     order_id: body.order_id,
@@ -571,7 +572,6 @@ export class PaymentGatewayService {
     async handleWebhook(payload: any, signature: string) {
         try {
             const dbContext = await DbContext.getContextByConfig();
-            console.log("payload",payload)
             let secret = "X310sX1nRP4dnv7fvdHTNdid"
             const expectedSignature = crypto
                 .createHmac('sha256', secret)
@@ -586,7 +586,7 @@ export class PaymentGatewayService {
             if (signature == expectedSignature) {
                 console.log("payload.payload.payment.entity.notes", payload.payload.payment.entity.notes)
                 if (payload.event === "payment.captured") {
-                    console.log("Payment success",payload)
+                    console.log("Payment success")
                     // const payment = await dbContext.PaymentGateway.updateOne({ transaction_id: payload.payload.payment.entity.id }, { $set: { status: payload.payload.payment.entity.status, request_data: payload.payload.payment.entity, checksum: signature, is_verified: true } });
                     const newOrder = new dbContext.PaymentGateway();
                     newOrder.transaction_id = payload.payload.payment.entity.id;
@@ -606,9 +606,7 @@ export class PaymentGatewayService {
                     await this.updateBhadhraChalam(body);
                     return true;
                 }
-                else if(payload.event === "payment.failed"){
-                    console.log("Failed")
-                    console.log("Payment Failed",payload)
+                else {
                     const newOrder = new dbContext.PaymentGateway();
                     newOrder.transaction_id = payload.payload.payment.entity.id;
                     newOrder.order_id = payload.payload.payment.entity.notes.order_id;
