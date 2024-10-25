@@ -545,7 +545,6 @@ export class PaymentGatewayService {
                 payment_amount: body.amount,
                 description: "For Store 1",
                 customer_id: "cust_PBeUdZgHAmNeM6",
-                order_id: body.order_id,
                 // close_by: 1729529700, // Optional
                 notes: {
                     order_id: body.order_id,
